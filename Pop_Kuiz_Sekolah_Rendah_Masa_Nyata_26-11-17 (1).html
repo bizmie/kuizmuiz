@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pop Kuiz Sekolah Rendah (Masa Nyata)</title>
+    <!-- Tailwind CSS untuk reka bentuk responsif moden -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 100%);
+            min-height: 100vh;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.85; }
+        }
+        .animate-glow {
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-3 sm:p-6 text-slate-800">
+
+    <!-- SKRIN LOADING AWAL (Menunggu Pengesahan & Muat Turun Data Cloud) -->
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex flex-col items-center justify-center text-white p-6 text-center">
+        <div class="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mb-5"></div>
+        <h2 class="text-xl sm:text-2xl font-bold mb-2">Menyambung ke Pelayan Awan...</h2>
+        <p id="loading-status" class="text-slate-300 text-sm sm:text-base max-w-md">
+            Mengesahkan sesi dan memuat turun keadaan kuiz masa nyata. Sila tunggu sebentar...
+        </p>
+    </div>
+
+    <!-- KONTENA UTAMA APLIKASI -->
+    <div id="app-container" class="hidden w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-white">
+        
+        <!-- PENGEPALA & STATUS PENYELARASAN -->
+        <header class="bg-blue-600 text-white p-5 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-3 h-3 bg-emerald-400 rounded-full animate-ping"></span>
+                        <span class="text-xs font-bold uppercase tracking-wider bg-blue-800/70 px-2.5 py-1 rounded-full">
+                            Live Sync • ID Bilik: <span id="display-room-id" class="text-amber-300">kuiz-sekolah-utama</span>
+                        </span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold mt-2 tracking-tight">🏆 Pop Kuiz Sekolah Rendah</h1>
+                </div>
+
+                <!-- Penukar Peranan (Hos PC vs Paparan Murid/Telefon) -->
+                <div class="flex items-center bg-blue-800/60 p-1.5 rounded-2xl self-start sm:self-center">
+                    <button id="role-host-btn" onclick="setRole('host')" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow">
+                        💻 Kawalan PC (Hos)
+                    </button>
+                    <button id="role-viewer-btn" onclick="setRole('viewer')" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white">
+                        📱 Paparan Telefon
+                    </button>
+                </div>
+            </div>
+            <p id="role-hint" class="text-xs sm:text-sm text-blue-100 mt-2">
+                Mod Kawalan PC: Setiap tindakan anda akan dikemas kini serta-merta ke semua telefon bimbit yang membuka pautan ini.
+            </p>
+        </header>
+
+        <!-- KANDUNGAN DINAMIK -->
+        <main class="p-5 sm:p-8">
+
+            <!-- PAPARAN 1: MENU UTAMA (PILIHAN MOD TAHAP 1 & TAHAP 2) -->
+            <section id="view-menu">
+                <div class="text-center mb-6">
+                    <h2 class="text-lg sm:text-xl font-bold text-slate-700">Pilih Kategori Tahap Kuiz</h2>
+                    <p id="menu-subtext" class="text-sm text-slate-500 mt-1">Klik salah satu mod di bawah untuk memulakan sesi kuiz serentak.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <!-- Kad Mod Tahap 1 -->
+                    <button id="btn-start-t1" onclick="hostStartQuiz('tahap1')" class="group text-left bg-slate-50 hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-500 rounded-2xl p-6 transition-all shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed">
+                        <span class="inline-block bg-blue-100 text-blue-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase mb-3">
+                            Umur 7 – 9 Tahun
+                        </span>
+                        <h3 class="text-xl font-extrabold text-slate-800 group-hover:text-blue-700 mb-2">Mod Tahap 1</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            <strong>10 Soalan Betul / Tidak</strong><br>
+                            Sesuai untuk murid Tahun 1, 2 & 3. Pilihan pantas Betul atau Tidak.
+                        </p>
+                    </button>
+
+                    <!-- Kad Mod Tahap 2 -->
+                    <button id="btn-start-t2" onclick="hostStartQuiz('tahap2')" class="group text-left bg-slate-50 hover:bg-amber-50 border-2 border-slate-200 hover:border-amber-500 rounded-2xl p-6 transition-all shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed">
+                        <span class="inline-block bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase mb-3">
+                            Umur 9 – 12 Tahun
+                        </span>
+                        <h3 class="text-xl font-extrabold text-slate-800 group-hover:text-amber-700 mb-2">Mod Tahap 2</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            <strong>10 Soalan Terbuka</strong><br>
+                            Format 1 Soalan, 1 Jawapan. Hos boleh dedahkan jawapan dan beri markah terus.
+                        </p>
+                    </button>
+                </div>
+
+                <!-- Notis khas jika dalam mod Paparan Telefon -->
+                <div id="viewer-waiting-banner" class="hidden mt-6 bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl p-4 text-center text-sm font-medium animate-glow">
+                    ⏳ Menunggu Hos (PC) memilih Mod Tahap 1 atau Tahap 2 untuk memulakan kuiz...
+                </div>
+            </section>
+
+            <!-- PAPARAN 2: SESI KUIZ AKTIF -->
+            <section id="view-quiz" class="hidden">
+                <!-- Bar Status Atas -->
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <span id="badge-active-mode" class="px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-blue-100 text-blue-800">
+                        Mod Tahap 1
+                    </span>
+                    <div class="flex items-center gap-4 text-sm sm:text-base font-bold">
+                        <span id="txt-progress" class="text-slate-600">Soalan 1 / 10</span>
+                        <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-xl">
+                            Markah: <span id="txt-score">0</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Bar Kemajuan -->
+                <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden mb-6">
+                    <div id="bar-progress" class="h-full bg-blue-600 transition-all duration-300" style="width: 10%;"></div>
+                </div>
+
+                <!-- Kotak Soalan Utama -->
+                <div class="bg-slate-50 border-l-8 border-blue-600 rounded-2xl p-5 sm:p-7 mb-6 shadow-inner">
+                    <p id="txt-question" class="text-lg sm:text-2xl font-bold text-slate-800 leading-snug">
+                        Memuatkan soalan...
+                    </p>
+                </div>
+
+                <!-- KAWALAN KHUSUS HOS (PC) -->
+                <div id="host-controls-area">
+                    <!-- Kawalan Tahap 1 -->
+                    <div id="host-t1-buttons" class="grid grid-cols-2 gap-4 mb-5">
+                        <button id="btn-t1-true" onclick="hostAnswerT1(true)" class="py-4 px-5 rounded-2xl font-extrabold text-lg bg-emerald-100 hover:bg-emerald-500 text-emerald-900 hover:text-white border-2 border-emerald-400 transition disabled:opacity-50">
+                            ✔ BETUL
+                        </button>
+                        <button id="btn-t1-false" onclick="hostAnswerT1(false)" class="py-4 px-5 rounded-2xl font-extrabold text-lg bg-rose-100 hover:bg-rose-500 text-rose-900 hover:text-white border-2 border-rose-400 transition disabled:opacity-50">
+                            ✖ TIDAK
+                        </button>
+                    </div>
+
+                    <!-- Kawalan Tahap 2 -->
+                    <div id="host-t2-controls" class="hidden space-y-3 mb-5">
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="input-t2-answer" placeholder="Taip jawapan murid di sini..." class="flex-1 px-4 py-3.5 rounded-2xl border-2 border-slate-300 focus:border-blue-600 outline-none text-base font-medium" onkeypress="if(event.key==='Enter') hostCheckT2Input()">
+                            <button id="btn-t2-check" onclick="hostCheckT2Input()" class="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition disabled:opacity-50">
+                                Semak
+                            </button>
+                        </div>
+                        <button id="btn-t2-reveal" onclick="hostRevealT2()" class="w-full py-3.5 px-5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold transition shadow-sm disabled:opacity-50">
+                            👁️ Papar Jawapan Sebenar (Mod Lisan)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NOTIS UNTUK TELEFON BIMBIT (VIEWER) -->
+                <div id="viewer-quiz-notice" class="hidden mb-5 bg-blue-50 border border-blue-200 rounded-2xl p-3.5 text-center text-xs sm:text-sm text-blue-800 font-medium">
+                    📱 Paparan Diselaraskan: Jawapan dan markah dikawal secara langsung oleh Hos PC.
+                </div>
+
+                <!-- KOTAK MAKLUM BALAS / JAWAPAN SERENTAK -->
+                <div id="feedback-panel" class="hidden rounded-2xl p-5 mb-5 border-2 transition-all">
+                    <h4 id="fb-title" class="text-lg font-extrabold mb-1"></h4>
+                    <p id="fb-detail" class="text-base leading-relaxed"></p>
+
+                    <!-- Butang Pengesahan Markah Manual untuk Hos (Tahap 2) -->
+                    <div id="host-manual-judge" class="hidden grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-amber-300/60">
+                        <button onclick="hostManualScore(true)" class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition">
+                            ✔ Murid Betul (+1 Markah)
+                        </button>
+                        <button onclick="hostManualScore(false)" class="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm transition">
+                            ✖ Murid Salah (0 Markah)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BAR NAVIGASI BAWAH (HOS SAHAJA) -->
+                <div id="host-footer-nav" class="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <button onclick="hostResetToMenu()" class="px-4 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition">
+                        ← Tukar Tahap
+                    </button>
+                    <button id="btn-next-question" onclick="hostNextQuestion()" class="hidden px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold shadow-md transition">
+                        Soalan Seterusnya →
+                    </button>
+                </div>
+            </section>
+
+            <!-- PAPARAN 3: KEPUTUSAN AKHIR -->
+            <section id="view-result" class="hidden text-center py-4">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-4">🎉 Tahniah! Kuiz Tamat</h2>
+                <div class="w-36 h-36 rounded-full bg-blue-600 text-white flex flex-col items-center justify-center mx-auto mb-5 shadow-xl border-4 border-blue-200">
+                    <span id="txt-final-score" class="text-5xl font-black">0</span>
+                    <span class="text-xs font-semibold opacity-90 mt-1">daripada 10</span>
+                </div>
+                <p id="txt-result-msg" class="text-base sm:text-lg text-slate-600 max-w-md mx-auto mb-6 font-medium"></p>
+
+                <!-- Butang Kawalan Tamat untuk Hos -->
+                <div id="host-result-actions" class="flex flex-wrap justify-center gap-3">
+                    <button onclick="hostRestartSameMode()" class="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold shadow transition">
+                        🔄 Main Semula Tahap Ini
+                    </button>
+                    <button onclick="hostResetToMenu()" class="px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold shadow transition">
+                        🏠 Kembali ke Menu Utama
+                    </button>
+                </div>
+
+                <p id="viewer-result-notice" class="hidden text-sm text-slate-500 italic">
+                    Menunggu Hos (PC) untuk memulakan pusingan baharu...
+                </p>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- KOTAK MESEJ NOTIFIKASI (Menggantikan alert()) -->
+    <div id="toast-box" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-3 rounded-2xl text-sm font-semibold shadow-xl opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+        Mesej sistem
+    </div>
+
+    <!-- SKRIP FIREBASE MODULAR & LOGIK PENYELARASAN MASA NYATA -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Konfigurasi Firebase dari lampiran pengguna
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSqblFdWXAIg9IFV3EZN-iLKXhfkL0c2g",
+            authDomain: "mysmartapps.firebaseapp.com",
+            projectId: "mysmartapps",
+            storageBucket: "mysmartapps.firebasestorage.app",
+            messagingSenderId: "329775742642",
+            appId: "1:329775742642:web:0792fc664af1fe2abcd3ab",
+            measurementId: "G-HCT2CJ7Y0L"
+        };
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ID Khusus dan Laluan Firestore Patuh Peraturan
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mysmartapps-kuiz';
+        // Menyokong parameter URL ?bilik=nama_bilik atau lalai 'kuiz-sekolah-utama' supaya semua peranti merujuk dokumen yang sama
+        const urlParams = new URLSearchParams(window.location.search);
+        const ROOM_ID = urlParams.get('bilik') || 'kuiz-sekolah-utama';
+        document.getElementById('display-room-id').textContent = ROOM_ID;
+
+        // Laluan Dokumen Awam Serentak: /artifacts/{appId}/public/data/kuiz_live/{ROOM_ID}
+        const roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kuiz_live', ROOM_ID);
+
+        // Pangkalan Data Soalan Kuiz
+        const quizData = {
+            tahap1: [
+                { q: "Hari Malaysia disambut pada setiap tarikh 16 September setiap tahun.", answer: true, note: "Betul! Hari Malaysia memperingati penubuhan persekutuan Malaysia pada 16 September 1963." },
+                { q: "Bendera Malaysia mempunyai 14 jalur merah dan putih serta 14 bucu pada bintangnya.", answer: true, note: "Betul! 14 jalur dan 14 bucu bintang melambangkan perpaduan 13 buah negeri dan Wilayah Persekutuan." },
+                { q: "Dinosaur pernah hidup bersama-sama dengan manusia pada zaman Kesultanan Melayu Melaka.", answer: false, note: "Tidak! Dinosaur telah pupus berjuta-juta tahun sebelum manusia wujud." },
+                { q: "Planet Bumi adalah planet yang kelima dari Matahari dalam sistem suria kita.", answer: false, note: "Tidak! Bumi ialah planet yang ketiga dari Matahari (selepas Utarid dan Zuhrah)." },
+                { q: "Kancil (Sang Kancil) adalah watak haiwan bijak yang sangat terkenal dalam cerita rakyat tradisional Melayu.", answer: true, note: "Betul! Sang Kancil terkenal dengan kebijaksanaannya menyelesaikan masalah." },
+                { q: "Malaysia terletak di benua Eropah dan mempunyai empat musim sepanjang tahun.", answer: false, note: "Tidak! Malaysia terletak di Asia Tenggara dan beriklim khatulistiwa (panas dan lembap sepanjang tahun)." },
+                { q: "Tok Janggut merupakan salah seorang pahlawan Melayu yang terkenal kerana menentang penjajahan British di Kelantan.", answer: true, note: "Betul! Nama sebenar beliau ialah Haji Mat Hassan bin Munas." },
+                { q: "Rukun Negara diisytiharkan secara rasmi pada tanggal 31 Ogos 1970.", answer: true, note: "Betul! Rukun Negara diperkenalkan untuk mengukuhkan perpaduan rakyat Malaysia." },
+                { q: "Gunung Kinabalu, gunung tertinggi di Malaysia, terletak di negeri Sarawak.", answer: false, note: "Tidak! Gunung Kinabalu terletak di negeri Sabah." },
+                { q: "Air mendidih pada suhu 100 darjah Celsius (100°C) pada tekanan atmosfera biasa.", answer: true, note: "Betul! Takat didih air tulen ialah 100°C manakala takat bekunya ialah 0°C." }
+            ],
+            tahap2: [
+                { q: "Apakah nama bendera rasmi Malaysia?", answer: "Jalur Gemilang", keywords: ["jalur gemilang"] },
+                { q: "Siapakah Perdana Menteri Malaysia yang pertama dan digelar sebagai 'Bapa Kemerdekaan'?", answer: "Tunku Abdul Rahman Putra Al-Haj", keywords: ["tunku abdul rahman", "tunku"] },
+                { q: "Apakah ibu negara Malaysia?", answer: "Kuala Lumpur", keywords: ["kuala lumpur", "kl"] },
+                { q: "Di manakah lokasi Menara Berkembar Petronas yang menjadi ikon terkenal Malaysia?", answer: "Kuala Lumpur", keywords: ["kuala lumpur", "klcc", "kl"] },
+                { q: "Apakah nama mata wang rasmi yang digunakan di Malaysia pada hari ini?", answer: "Ringgit Malaysia (RM)", keywords: ["ringgit", "rm"] },
+                { q: "Haiwan apakah yang dipilih sebagai maskot rasmi bagi negeri Sabah di Malaysia?", answer: "Orang Utan", keywords: ["orang utan", "orangutan"] },
+                { q: "Apakah nama bunga kebangsaan bagi negara Malaysia?", answer: "Bunga Raya", keywords: ["bunga raya", "raya", "hibiscus"] },
+                { q: "Pada tahun berapakah Tanah Melayu diisytiharkan merdeka?", answer: "1957 (31 Ogos 1957)", keywords: ["1957"] },
+                { q: "Sukan apakah yang paling popular di Malaysia di mana Datuk Lee Chong Wei dan Lee Zii Jia pernah mengharumkan nama negara?", answer: "Badminton", keywords: ["badminton"] },
+                { q: "Apakah nama jambatan ikonik yang menghubungkan Pulau Pinang dengan tanah besar Semenanjung Malaysia?", answer: "Jambatan Pulau Pinang", keywords: ["jambatan pulau pinang", "pulau pinang", "sultan abdul halim"] }
+            ]
+        };
+
+        // Keadaan Lalai Sesi Awan
+        const defaultRoomState = {
+            screen: 'menu',          // 'menu' | 'quiz' | 'result'
+            mode: 'tahap1',          // 'tahap1' | 'tahap2'
+            questionIndex: 0,
+            score: 0,
+            status: 'asking',        // 'asking' | 'revealed' | 'graded'
+            feedbackType: 'none',    // 'none' | 'correct' | 'wrong' | 'info'
+            feedbackTitle: '',
+            feedbackDetail: '',
+            lastUpdated: Date.now()
+        };
+
+        let currentUser = null;
+        let currentState = { ...defaultRoomState };
+        // Auto-kesan peranan: skrin kecil (< 768px) lalai sebagai Paparan Telefon, PC lalai sebagai Hos
+        let userRole = window.innerWidth < 768 ? 'viewer' : 'host';
+        let lastSoundTimestamp = 0;
+
+        // Penjana Audio Web (Tanpa URL luaran)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.linearRampToValueAtTime(140, now + 0.3);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'reveal') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+                    osc.start(now);
+                    osc.stop(now + 0.18);
+                }
+            } catch (e) {
+                // Abaikan jika browser menyekat autoplay audio sebelum interaksi
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-box');
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => toast.classList.add('opacity-0'), 3000);
+        }
+
+        // Fungsi Kemas Kini Keadaan ke Cloud Firestore
+        async function syncStateToCloud(newPartialState) {
+            if (!currentUser) return;
+            if (userRole !== 'host') {
+                showToast("Tukar ke mod 'Kawalan PC (Hos)' untuk mengawal kuiz.");
+                return;
+            }
+            const updatedState = {
+                ...currentState,
+                ...newPartialState,
+                lastUpdated: Date.now()
+            };
+            try {
+                await setDoc(roomDocRef, updatedState);
+            } catch (err) {
+                console.error("Ralat penyelarasan Cloud:", err);
+                showToast("Gagal menyelaraskan data ke awan. Sila semak sambungan.");
+            }
+        }
+
+        // Penukar Peranan UI (Hos vs Paparan Telefon)
+        window.setRole = function(role) {
+            userRole = role;
+            const hostBtn = document.getElementById('role-host-btn');
+            const viewerBtn = document.getElementById('role-viewer-btn');
+            const roleHint = document.getElementById('role-hint');
+
+            if (role === 'host') {
+                hostBtn.className = "px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow";
+                viewerBtn.className = "px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white";
+                roleHint.textContent = "Mod Kawalan PC: Setiap tindakan anda akan dikemas kini serta-merta ke semua telefon bimbit.";
+            } else {
+                viewerBtn.className = "px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow";
+                hostBtn.className = "px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white";
+                roleHint.textContent = "Mod Paparan Telefon: Skrin ini diselaraskan secara langsung mengikut kawalan Hos PC.";
+            }
+            renderUI();
+        };
+
+        // Tindakan-Tindakan Kawalan Hos (PC)
+        window.hostStartQuiz = function(mode) {
+            syncStateToCloud({
+                screen: 'quiz',
+                mode: mode,
+                questionIndex: 0,
+                score: 0,
+                status: 'asking',
+                feedbackType: 'none',
+                feedbackTitle: '',
+                feedbackDetail: ''
+            });
+        };
+
+        window.hostAnswerT1 = function(userChoice) {
+            if (currentState.status !== 'asking') return;
+            const item = quizData.tahap1[currentState.questionIndex];
+            const isCorrect = (userChoice === item.answer);
+            const newScore = isCorrect ? currentState.score + 1 : currentState.score;
+
+            syncStateToCloud({
+                score: newScore,
+                status: 'graded',
+                feedbackType: isCorrect ? 'correct' : 'wrong',
+                feedbackTitle: isCorrect ? '🎉 Tahniah, Jawapan Tepat!' : '😅 Kurang Tepat!',
+                feedbackDetail: item.note
+            });
+        };
+
+        window.hostCheckT2Input = function() {
+            if (currentState.status !== 'asking') return;
+            const inputEl = document.getElementById('input-t2-answer');
+            const val = inputEl.value.trim().toLowerCase();
+            if (!val) {
+                showToast("Sila taip jawapan murid atau tekan 'Papar Jawapan Sebenar'.");
+                return;
+            }
+            const item = quizData.tahap2[currentState.questionIndex];
+            const isCorrect = item.keywords.some(kw => val.includes(kw));
+            const newScore = isCorrect ? currentState.score + 1 : currentState.score;
+
+            syncStateToCloud({
+                score: newScore,
+                status: 'graded',
+                feedbackType: isCorrect ? 'correct' : 'wrong',
+                feedbackTitle: isCorrect ? '🎉 Betul! Jawapan diterima.' : '😅 Jawapan kurang tepat.',
+                feedbackDetail: `Jawapan penuh: ${item.answer}`
+            });
+        };
+
+        window.hostRevealT2 = function() {
+            if (currentState.status !== 'asking') return;
+            const item = quizData.tahap2[currentState.questionIndex];
+            syncStateToCloud({
+                status: 'revealed',
+                feedbackType: 'info',
+                feedbackTitle: '💡 Jawapan Sebenar:',
+                feedbackDetail: item.answer
+            });
+        };
+
+        window.hostManualScore = function(isCorrect) {
+            if (currentState.status !== 'revealed') return;
+            const newScore = isCorrect ? currentState.score + 1 : currentState.score;
+            syncStateToCloud({
+                score: newScore,
+                status: 'graded',
+                feedbackType: isCorrect ? 'correct' : 'wrong',
+                feedbackTitle: isCorrect ? '🎉 Murid Menjawab Betul! (+1 Markah)' : '😅 Jawapan Kurang Tepat (0 Markah)',
+                feedbackDetail: currentState.feedbackDetail
+            });
+        };
+
+        window.hostNextQuestion = function() {
+            const list = quizData[currentState.mode];
+            const nextIdx = currentState.questionIndex + 1;
+            if (nextIdx < list.length) {
+                syncStateToCloud({
+                    questionIndex: nextIdx,
+                    status: 'asking',
+                    feedbackType: 'none',
+                    feedbackTitle: '',
+                    feedbackDetail: ''
+                });
+            } else {
+                syncStateToCloud({
+                    screen: 'result',
+                    status: 'finished'
+                });
+            }
+        };
+
+        window.hostRestartSameMode = function() {
+            hostStartQuiz(currentState.mode);
+        };
+
+        window.hostResetToMenu = function() {
+            syncStateToCloud({
+                ...defaultRoomState
+            });
+        };
+
+        // Fungsi Render Antaramuka Berdasarkan Data Cloud
+        function renderUI() {
+            const isHost = (userRole === 'host');
+
+            // Sembunyikan semua skrin dahulu
+            document.getElementById('view-menu').classList.add('hidden');
+            document.getElementById('view-quiz').classList.add('hidden');
+            document.getElementById('view-result').classList.add('hidden');
+
+            // 1. SKRIN MENU UTAMA
+            if (currentState.screen === 'menu') {
+                document.getElementById('view-menu').classList.remove('hidden');
+                document.getElementById('btn-start-t1').disabled = !isHost;
+                document.getElementById('btn-start-t2').disabled = !isHost;
+
+                if (isHost) {
+                    document.getElementById('viewer-waiting-banner').classList.add('hidden');
+                    document.getElementById('menu-subtext').textContent = "Klik salah satu mod di bawah untuk memulakan sesi kuiz serentak.";
+                } else {
+                    document.getElementById('viewer-waiting-banner').classList.remove('hidden');
+                    document.getElementById('menu-subtext').textContent = "Sesi kuiz sedia diselaraskan secara automatik.";
+                }
+                return;
+            }
+
+            // 2. SKRIN KUIZ AKTIF
+            if (currentState.screen === 'quiz') {
+                document.getElementById('view-quiz').classList.remove('hidden');
+
+                const modeList = quizData[currentState.mode] || quizData.tahap1;
+                const qIndex = Math.min(currentState.questionIndex, modeList.length - 1);
+                const item = modeList[qIndex];
+
+                // Lencana & Skor
+                const badgeEl = document.getElementById('badge-active-mode');
+                if (currentState.mode === 'tahap1') {
+                    badgeEl.textContent = "Mod Tahap 1 (Betul / Tidak)";
+                    badgeEl.className = "px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-blue-100 text-blue-800";
+                } else {
+                    badgeEl.textContent = "Mod Tahap 2 (1 Soalan, 1 Jawapan)";
+                    badgeEl.className = "px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-amber-100 text-amber-800";
+                }
+
+                document.getElementById('txt-progress').textContent = `Soalan ${qIndex + 1} / ${modeList.length}`;
+                document.getElementById('txt-score').textContent = currentState.score;
+                document.getElementById('bar-progress').style.width = `${((qIndex + 1) / modeList.length) * 100}%`;
+                document.getElementById('txt-question').textContent = `${qIndex + 1}. ${item.q}`;
+
+                // Paparan Kawalan Hos vs Viewer
+                const hostControlsArea = document.getElementById('host-controls-area');
+                const viewerQuizNotice = document.getElementById('viewer-quiz-notice');
+                const hostFooterNav = document.getElementById('host-footer-nav');
+
+                if (isHost) {
+                    hostControlsArea.classList.remove('hidden');
+                    viewerQuizNotice.classList.add('hidden');
+                    hostFooterNav.classList.remove('hidden');
+
+                    if (currentState.mode === 'tahap1') {
+                        document.getElementById('host-t1-buttons').classList.remove('hidden');
+                        document.getElementById('host-t2-controls').classList.add('hidden');
+                        const locked = currentState.status !== 'asking';
+                        document.getElementById('btn-t1-true').disabled = locked;
+                        document.getElementById('btn-t1-false').disabled = locked;
+                    } else {
+                        document.getElementById('host-t1-buttons').classList.add('hidden');
+                        document.getElementById('host-t2-controls').classList.remove('hidden');
+                        const locked = currentState.status !== 'asking';
+                        const inp = document.getElementById('input-t2-answer');
+                        if (!locked && inp.disabled) inp.value = '';
+                        inp.disabled = locked;
+                        document.getElementById('btn-t2-check').disabled = locked;
+                        document.getElementById('btn-t2-reveal').disabled = locked;
+                    }
+
+                    // Butang Soalan Seterusnya hanya muncul selepas selesai dinilai
+                    const nextBtn = document.getElementById('btn-next-question');
+                    if (currentState.status === 'graded') {
+                        nextBtn.classList.remove('hidden');
+                        nextBtn.textContent = (qIndex + 1 === modeList.length) ? "Lihat Keputusan Akhir →" : "Soalan Seterusnya →";
+                    } else {
+                        nextBtn.classList.add('hidden');
+                    }
+                } else {
+                    hostControlsArea.classList.add('hidden');
+                    viewerQuizNotice.classList.remove('hidden');
+                    hostFooterNav.classList.add('hidden');
+                }
+
+                // Panel Maklum Balas / Jawapan (Dipaparkan serentak pada PC & Telefon)
+                const fbPanel = document.getElementById('feedback-panel');
+                const manualJudge = document.getElementById('host-manual-judge');
+
+                if (currentState.feedbackType !== 'none') {
+                    fbPanel.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-400', 'text-emerald-900', 'bg-rose-50', 'border-rose-400', 'text-rose-900', 'bg-amber-50', 'border-amber-400', 'text-amber-950');
+                    
+                    if (currentState.feedbackType === 'correct') {
+                        fbPanel.classList.add('bg-emerald-50', 'border-emerald-400', 'text-emerald-900');
+                    } else if (currentState.feedbackType === 'wrong') {
+                        fbPanel.classList.add('bg-rose-50', 'border-rose-400', 'text-rose-900');
+                    } else {
+                        fbPanel.classList.add('bg-amber-50', 'border-amber-400', 'text-amber-950');
+                    }
+
+                    document.getElementById('fb-title').textContent = currentState.feedbackTitle;
+                    document.getElementById('fb-detail').textContent = currentState.feedbackDetail;
+
+                    // Butang pengesahan manual hanya muncul untuk Hos ketika status 'revealed'
+                    if (isHost && currentState.status === 'revealed') {
+                        manualJudge.classList.remove('hidden');
+                    } else {
+                        manualJudge.classList.add('hidden');
+                    }
+                } else {
+                    fbPanel.classList.add('hidden');
+                    manualJudge.classList.add('hidden');
+                }
+                return;
+            }
+
+            // 3. SKRIN KEPUTUSAN AKHIR
+            if (currentState.screen === 'result') {
+                document.getElementById('view-result').classList.remove('hidden');
+                document.getElementById('txt-final-score').textContent = currentState.score;
+
+                const msgEl = document.getElementById('txt-result-msg');
+                if (currentState.score >= 8) {
+                    msgEl.textContent = "Cemerlang! Pengetahuan sejarah dan isu semasa sangat hebat! 🌟";
+                } else if (currentState.score >= 5) {
+                    msgEl.textContent = "Syabas! Usaha yang bagus, teruskan membaca untuk tingkatkan ilmu. 👏";
+                } else {
+                    msgEl.textContent = "Jangan putus asa! Cuba main semula untuk mengukuhkan ingatan. 💪";
+                }
+
+                if (isHost) {
+                    document.getElementById('host-result-actions').classList.remove('hidden');
+                    document.getElementById('viewer-result-notice').classList.add('hidden');
+                } else {
+                    document.getElementById('host-result-actions').classList.add('hidden');
+                    document.getElementById('viewer-result-notice').classList.remove('hidden');
+                }
+            }
+        }
+
+        // PROSES BOOTSTRAP ASYNCHRONOUS (Elak Race Condition dengan Skrin Loading)
+        async function initializeRealtimeApp() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const loadingStatus = document.getElementById('loading-status');
+            const appContainer = document.getElementById('app-container');
+
+            try {
+                // Langkah 1: Pengesahan Pengguna (Gunakan signInAnonymously untuk projek Firebase khusus)
+                loadingStatus.textContent = "Mengesahkan sambungan keselamatan Firebase...";
+                const cred = await signInAnonymously(auth);
+                currentUser = cred.user;
+
+                if (!currentUser) throw new Error("Pengesahan pengguna gagal.");
+
+                // Langkah 2: Muat Turun Keadaan Awal dari Firestore (Await getDoc)
+                loadingStatus.textContent = `Memuat turun data bilik "${ROOM_ID}" dari Cloud...`;
+                const initialSnap = await getDoc(roomDocRef);
+
+                if (initialSnap.exists()) {
+                    currentState = { ...defaultRoomState, ...initialSnap.data() };
+                } else {
+                    // Cipta dokumen awal jika belum wujud
+                    await setDoc(roomDocRef, defaultRoomState);
+                    currentState = { ...defaultRoomState };
+                }
+
+                // Set peranan awal UI berdasarkan saiz peranti
+                window.setRole(userRole);
+                lastSoundTimestamp = currentState.lastUpdated || Date.now();
+
+                // Langkah 3: Pasang Pendengar Masa Nyata (onSnapshot)
+                onSnapshot(roomDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const incoming = docSnap.data();
+                        const isNewUpdate = incoming.lastUpdated && incoming.lastUpdated > lastSoundTimestamp;
+
+                        currentState = { ...defaultRoomState, ...incoming };
+                        renderUI();
+
+                        // Mainkan bunyi maklum balas apabila kemas kini baharu diterima
+                        if (isNewUpdate) {
+                            lastSoundTimestamp = incoming.lastUpdated;
+                            if (incoming.feedbackType === 'correct') playSound('correct');
+                            else if (incoming.feedbackType === 'wrong') playSound('wrong');
+                            else if (incoming.feedbackType === 'info') playSound('reveal');
+                        }
+                    }
+                }, (error) => {
+                    console.error("Ralat pendengar masa nyata:", error);
+                    showToast("Sambungan masa nyata terganggu. Menyambung semula...");
+                });
+
+                // Langkah 4: Sembunyikan Skrin Loading & Paparkan UI Utama selepas data siap sedia
+                loadingOverlay.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Ralat inisialisasi aplikasi:", error);
+                loadingStatus.innerHTML = `<span class="text-rose-400 font-bold">Gagal menyambung ke pelayan awan:</span><br>${error.message}<br><br>Sila muat semula halaman ini.`;
+            }
+        }
+
+        // Mulakan bootstrap aplikasi apabila halaman dimuatkan
+        window.addEventListener('DOMContentLoaded', initializeRealtimeApp);
+    </script>
+</body>
+</html>
