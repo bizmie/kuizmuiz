@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pop Kuiz Sekolah Rendah (Masa Nyata)</title>
-    <!-- Tailwind CSS untuk reka bentuk responsif moden -->
+    <title>Pop Kuiz (Masa Nyata)</title>
+    <!-- Tailwind CSS untuk reka bentuk responsif telefon & desktop -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -15,105 +15,131 @@
         }
         @keyframes pulseGlow {
             0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.85; }
+            50% { transform: scale(1.03); opacity: 0.9; }
         }
         .animate-glow {
             animation: pulseGlow 2s infinite ease-in-out;
         }
+        /* Animasi lancar untuk bar pemasa mendatar 30 saat */
+        #timer-bar-fill {
+            transition: width 0.25s linear, background-color 0.3s ease;
+        }
     </style>
 </head>
-<body class="flex items-center justify-center p-3 sm:p-6 text-slate-800">
+<body class="flex items-center justify-center p-2.5 sm:p-6 text-slate-800">
 
     <!-- SKRIN LOADING AWAL (Menunggu Pengesahan & Muat Turun Data Cloud) -->
     <div id="loading-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex flex-col items-center justify-center text-white p-6 text-center">
         <div class="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mb-5"></div>
         <h2 class="text-xl sm:text-2xl font-bold mb-2">Menyambung ke Pelayan Awan...</h2>
         <p id="loading-status" class="text-slate-300 text-sm sm:text-base max-w-md">
-            Mengesahkan sesi dan memuat turun keadaan kuiz masa nyata. Sila tunggu sebentar...
+            Mengesahkan sesi dan memuat turun bank soalan serta tetapan masa nyata...
         </p>
     </div>
 
     <!-- KONTENA UTAMA APLIKASI -->
-    <div id="app-container" class="hidden w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-white">
+    <div id="app-container" class="hidden w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-white">
         
-        <!-- PENGEPALA & STATUS PENYELARASAN -->
-        <header class="bg-blue-600 text-white p-5 sm:p-6">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <!-- PENGEPALA RESPONSIF (TELEFON & DESKTOP) -->
+        <header class="bg-blue-600 text-white p-4 sm:p-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
-                    <div class="flex items-center gap-2">
-                        <span class="inline-block w-3 h-3 bg-emerald-400 rounded-full animate-ping"></span>
-                        <span class="text-xs font-bold uppercase tracking-wider bg-blue-800/70 px-2.5 py-1 rounded-full">
-                            Live Sync • ID Bilik: <span id="display-room-id" class="text-amber-300">kuiz-sekolah-utama</span>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider bg-blue-800/80 px-2.5 py-1 rounded-full">
+                            <span class="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
+                            Live • Bilik: <span id="display-room-id" class="text-amber-300">kuiz-sekolah-utama</span>
+                        </span>
+                        <span id="bgm-live-badge" class="hidden text-xs font-bold bg-amber-500 text-slate-950 px-2.5 py-1 rounded-full animate-pulse">
+                            🎵 Muzik Latar Aktif
                         </span>
                     </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold mt-2 tracking-tight">🏆 Pop Kuiz Sekolah Rendah</h1>
+                    <h1 id="main-program-title" class="text-xl sm:text-3xl font-extrabold mt-2 tracking-tight">🏆 Pop Kuiz</h1>
                 </div>
 
-                <!-- Penukar Peranan (Hos PC vs Paparan Murid/Telefon) -->
-                <div class="flex items-center bg-blue-800/60 p-1.5 rounded-2xl self-start sm:self-center">
-                    <button id="role-host-btn" onclick="setRole('host')" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow">
-                        💻 Kawalan PC (Hos)
+                <!-- Penukar Peranan & Ikon Muzik Latar + Tetapan -->
+                <div class="flex flex-wrap items-center gap-2 self-start md:self-center">
+                    <!-- Butang Hidup/Mati Muzik Latar untuk semua skrin -->
+                    <button id="btn-toggle-bgm" onclick="toggleLocalAudio()" title="Hidupkan / Matikan Muzik Latar" class="p-2.5 rounded-2xl bg-blue-800/80 hover:bg-blue-700 text-white shadow transition flex items-center gap-1.5 border border-blue-400/30">
+                        <span id="bgm-icon" class="text-base sm:text-lg">🔇</span>
+                        <span id="bgm-btn-label" class="text-xs font-bold hidden sm:inline">Muzik: Mati</span>
                     </button>
-                    <button id="role-viewer-btn" onclick="setRole('viewer')" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white">
-                        📱 Paparan Telefon
+
+                    <div class="flex items-center bg-blue-800/70 p-1 rounded-2xl">
+                        <button id="role-viewer-btn" onclick="requestRoleSwitch('viewer')" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow">
+                            🙋 Penjawab Soalan
+                        </button>
+                        <button id="role-host-btn" onclick="requestRoleSwitch('host')" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white">
+                            🎛️ Hos Program / Admin
+                        </button>
+                    </div>
+
+                    <!-- Ikon Tetapan (Hanya muncul apabila dalam mod Hos Program / Admin) -->
+                    <button id="btn-open-settings" onclick="openSettingsModal()" title="Tetapan Hos, Muzik & Editor Soalan" class="hidden p-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold shadow transition">
+                        ⚙️
                     </button>
                 </div>
             </div>
             <p id="role-hint" class="text-xs sm:text-sm text-blue-100 mt-2">
-                Mod Kawalan PC: Setiap tindakan anda akan dikemas kini serta-merta ke semua telefon bimbit yang membuka pautan ini.
+                Mod Penjawab Soalan: Memaparkan soalan semasa secara langsung berserta pemasa mendatar 30 saat.
             </p>
         </header>
 
         <!-- KANDUNGAN DINAMIK -->
-        <main class="p-5 sm:p-8">
+        <main class="p-4 sm:p-8">
 
             <!-- PAPARAN 1: MENU UTAMA (PILIHAN MOD TAHAP 1 & TAHAP 2) -->
             <section id="view-menu">
                 <div class="text-center mb-6">
-                    <h2 class="text-lg sm:text-xl font-bold text-slate-700">Pilih Kategori Tahap Kuiz</h2>
-                    <p id="menu-subtext" class="text-sm text-slate-500 mt-1">Klik salah satu mod di bawah untuk memulakan sesi kuiz serentak.</p>
+                    <h2 class="text-lg sm:text-2xl font-extrabold text-slate-800">Pilih Kategori Tahap Kuiz</h2>
+                    <p id="menu-subtext" class="text-xs sm:text-sm text-slate-500 mt-1">Klik salah satu mod di bawah untuk memulakan sesi kuiz serentak.</p>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <!-- Kad Mod Tahap 1 -->
-                    <button id="btn-start-t1" onclick="hostStartQuiz('tahap1')" class="group text-left bg-slate-50 hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-500 rounded-2xl p-6 transition-all shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed">
-                        <span class="inline-block bg-blue-100 text-blue-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase mb-3">
-                            Umur 7 – 9 Tahun
-                        </span>
+                    <button id="btn-start-t1" onclick="hostStartQuiz('tahap1')" class="group text-left bg-slate-50 hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-500 rounded-2xl p-5 sm:p-6 transition-all shadow-sm hover:shadow-md disabled:opacity-65 disabled:cursor-not-allowed">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="inline-block bg-blue-100 text-blue-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase">
+                                Umur 7 – 9 Tahun
+                            </span>
+                            <span id="count-t1-badge" class="text-xs font-bold text-slate-500">10 Soalan</span>
+                        </div>
                         <h3 class="text-xl font-extrabold text-slate-800 group-hover:text-blue-700 mb-2">Mod Tahap 1</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">
-                            <strong>10 Soalan Betul / Tidak</strong><br>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            <strong>Format Betul / Tidak</strong><br>
                             Sesuai untuk murid Tahun 1, 2 & 3. Pilihan pantas Betul atau Tidak.
                         </p>
                     </button>
 
                     <!-- Kad Mod Tahap 2 -->
-                    <button id="btn-start-t2" onclick="hostStartQuiz('tahap2')" class="group text-left bg-slate-50 hover:bg-amber-50 border-2 border-slate-200 hover:border-amber-500 rounded-2xl p-6 transition-all shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed">
-                        <span class="inline-block bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase mb-3">
-                            Umur 9 – 12 Tahun
-                        </span>
+                    <button id="btn-start-t2" onclick="hostStartQuiz('tahap2')" class="group text-left bg-slate-50 hover:bg-amber-50 border-2 border-slate-200 hover:border-amber-500 rounded-2xl p-5 sm:p-6 transition-all shadow-sm hover:shadow-md disabled:opacity-65 disabled:cursor-not-allowed">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="inline-block bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase">
+                                Umur 9 – 12 Tahun
+                            </span>
+                            <span id="count-t2-badge" class="text-xs font-bold text-slate-500">10 Soalan</span>
+                        </div>
                         <h3 class="text-xl font-extrabold text-slate-800 group-hover:text-amber-700 mb-2">Mod Tahap 2</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">
-                            <strong>10 Soalan Terbuka</strong><br>
-                            Format 1 Soalan, 1 Jawapan. Hos boleh dedahkan jawapan dan beri markah terus.
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            <strong>Format 1 Soalan, 1 Jawapan</strong><br>
+                            Soalan terbuka. Hos boleh dedahkan jawapan dan beri markah terus.
                         </p>
                     </button>
                 </div>
 
-                <!-- Notis khas jika dalam mod Paparan Telefon -->
-                <div id="viewer-waiting-banner" class="hidden mt-6 bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl p-4 text-center text-sm font-medium animate-glow">
-                    ⏳ Menunggu Hos (PC) memilih Mod Tahap 1 atau Tahap 2 untuk memulakan kuiz...
+                <!-- Notis khas jika dalam mod Penjawab Soalan -->
+                <div id="viewer-waiting-banner" class="hidden mt-6 bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl p-4 text-center text-xs sm:text-sm font-semibold animate-glow">
+                    ⏳ Paparan Penjawab Soalan: Menunggu Hos Program memulakan sesi kuiz...
                 </div>
             </section>
 
             <!-- PAPARAN 2: SESI KUIZ AKTIF -->
             <section id="view-quiz" class="hidden">
                 <!-- Bar Status Atas -->
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                     <span id="badge-active-mode" class="px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-blue-100 text-blue-800">
                         Mod Tahap 1
                     </span>
-                    <div class="flex items-center gap-4 text-sm sm:text-base font-bold">
+                    <div class="flex items-center gap-3 text-xs sm:text-base font-bold">
                         <span id="txt-progress" class="text-slate-600">Soalan 1 / 10</span>
                         <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-xl">
                             Markah: <span id="txt-score">0</span>
@@ -121,26 +147,50 @@
                     </div>
                 </div>
 
-                <!-- Bar Kemajuan -->
-                <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden mb-6">
-                    <div id="bar-progress" class="h-full bg-blue-600 transition-all duration-300" style="width: 10%;"></div>
+                <!-- PEMASA MENDATAR 30 SAAT (Dipaparkan serentak pada Penjawab Soalan & Hos) -->
+                <div class="bg-slate-100 border border-slate-200 rounded-2xl p-3 sm:p-4 mb-5">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs sm:text-sm font-extrabold text-slate-700 flex items-center gap-1.5">
+                            ⏱️ Masa Menjawab (30 Saat)
+                        </span>
+                        <span id="timer-seconds-text" class="text-base sm:text-lg font-black text-blue-700 tabular-nums">
+                            30s
+                        </span>
+                    </div>
+                    <!-- Bar Mendatar 30 Saat -->
+                    <div class="w-full h-4 bg-slate-300 rounded-full overflow-hidden shadow-inner">
+                        <div id="timer-bar-fill" class="h-full bg-emerald-500 rounded-full" style="width: 100%;"></div>
+                    </div>
+
+                    <!-- Butang Kawalan Pemasa Khusus untuk Hos Program / Admin -->
+                    <div id="host-timer-controls" class="grid grid-cols-3 gap-2 mt-3 pt-2.5 border-t border-slate-200">
+                        <button onclick="hostStartTimer()" class="py-2 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition shadow-sm">
+                            ▶ Mula 30s
+                        </button>
+                        <button onclick="hostPauseTimer()" class="py-2 px-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-bold transition shadow-sm">
+                            ⏸ Jeda
+                        </button>
+                        <button onclick="hostResetTimer()" class="py-2 px-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white text-xs sm:text-sm font-bold transition shadow-sm">
+                            ↺ Set Semula
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Kotak Soalan Utama -->
-                <div class="bg-slate-50 border-l-8 border-blue-600 rounded-2xl p-5 sm:p-7 mb-6 shadow-inner">
-                    <p id="txt-question" class="text-lg sm:text-2xl font-bold text-slate-800 leading-snug">
+                <div class="bg-slate-50 border-l-8 border-blue-600 rounded-2xl p-5 sm:p-7 mb-5 shadow-inner">
+                    <p id="txt-question" class="text-lg sm:text-2xl font-extrabold text-slate-800 leading-snug">
                         Memuatkan soalan...
                     </p>
                 </div>
 
-                <!-- KAWALAN KHUSUS HOS (PC) -->
+                <!-- KAWALAN KHUSUS HOS PROGRAM / ADMIN (RESPONSIF TELEFON & DESKTOP) -->
                 <div id="host-controls-area">
                     <!-- Kawalan Tahap 1 -->
-                    <div id="host-t1-buttons" class="grid grid-cols-2 gap-4 mb-5">
-                        <button id="btn-t1-true" onclick="hostAnswerT1(true)" class="py-4 px-5 rounded-2xl font-extrabold text-lg bg-emerald-100 hover:bg-emerald-500 text-emerald-900 hover:text-white border-2 border-emerald-400 transition disabled:opacity-50">
+                    <div id="host-t1-buttons" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-5">
+                        <button id="btn-t1-true" onclick="hostAnswerT1(true)" class="py-4 px-5 rounded-2xl font-extrabold text-base sm:text-lg bg-emerald-100 hover:bg-emerald-500 text-emerald-900 hover:text-white border-2 border-emerald-400 transition disabled:opacity-50">
                             ✔ BETUL
                         </button>
-                        <button id="btn-t1-false" onclick="hostAnswerT1(false)" class="py-4 px-5 rounded-2xl font-extrabold text-lg bg-rose-100 hover:bg-rose-500 text-rose-900 hover:text-white border-2 border-rose-400 transition disabled:opacity-50">
+                        <button id="btn-t1-false" onclick="hostAnswerT1(false)" class="py-4 px-5 rounded-2xl font-extrabold text-base sm:text-lg bg-rose-100 hover:bg-rose-500 text-rose-900 hover:text-white border-2 border-rose-400 transition disabled:opacity-50">
                             ✖ TIDAK
                         </button>
                     </div>
@@ -148,7 +198,7 @@
                     <!-- Kawalan Tahap 2 -->
                     <div id="host-t2-controls" class="hidden space-y-3 mb-5">
                         <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="text" id="input-t2-answer" placeholder="Taip jawapan murid di sini..." class="flex-1 px-4 py-3.5 rounded-2xl border-2 border-slate-300 focus:border-blue-600 outline-none text-base font-medium" onkeypress="if(event.key==='Enter') hostCheckT2Input()">
+                            <input type="text" id="input-t2-answer" placeholder="Taip jawapan peserta di sini..." class="flex-1 px-4 py-3.5 rounded-2xl border-2 border-slate-300 focus:border-blue-600 outline-none text-base font-medium" onkeypress="if(event.key==='Enter') hostCheckT2Input()">
                             <button id="btn-t2-check" onclick="hostCheckT2Input()" class="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition disabled:opacity-50">
                                 Semak
                             </button>
@@ -159,33 +209,33 @@
                     </div>
                 </div>
 
-                <!-- NOTIS UNTUK TELEFON BIMBIT (VIEWER) -->
-                <div id="viewer-quiz-notice" class="hidden mb-5 bg-blue-50 border border-blue-200 rounded-2xl p-3.5 text-center text-xs sm:text-sm text-blue-800 font-medium">
-                    📱 Paparan Diselaraskan: Jawapan dan markah dikawal secara langsung oleh Hos PC.
+                <!-- NOTIS UNTUK PENJAWAB SOALAN -->
+                <div id="viewer-quiz-notice" class="hidden mb-5 bg-blue-50 border border-blue-200 rounded-2xl p-3.5 text-center text-xs sm:text-sm text-blue-900 font-semibold">
+                    🙋 Paparan Penjawab Soalan: Sila bersedia menjawab sebelum masa 30 saat tamat!
                 </div>
 
                 <!-- KOTAK MAKLUM BALAS / JAWAPAN SERENTAK -->
-                <div id="feedback-panel" class="hidden rounded-2xl p-5 mb-5 border-2 transition-all">
-                    <h4 id="fb-title" class="text-lg font-extrabold mb-1"></h4>
-                    <p id="fb-detail" class="text-base leading-relaxed"></p>
+                <div id="feedback-panel" class="hidden rounded-2xl p-4 sm:p-5 mb-5 border-2 transition-all">
+                    <h4 id="fb-title" class="text-base sm:text-lg font-extrabold mb-1"></h4>
+                    <p id="fb-detail" class="text-sm sm:text-base leading-relaxed"></p>
 
                     <!-- Butang Pengesahan Markah Manual untuk Hos (Tahap 2) -->
-                    <div id="host-manual-judge" class="hidden grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-amber-300/60">
-                        <button onclick="hostManualScore(true)" class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition">
-                            ✔ Murid Betul (+1 Markah)
+                    <div id="host-manual-judge" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-4 pt-3 border-t border-amber-300/60">
+                        <button onclick="hostManualScore(true)" class="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition">
+                            ✔ Peserta Betul (+1 Markah)
                         </button>
-                        <button onclick="hostManualScore(false)" class="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm transition">
-                            ✖ Murid Salah (0 Markah)
+                        <button onclick="hostManualScore(false)" class="py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm transition">
+                            ✖ Peserta Salah (0 Markah)
                         </button>
                     </div>
                 </div>
 
                 <!-- BAR NAVIGASI BAWAH (HOS SAHAJA) -->
-                <div id="host-footer-nav" class="flex items-center justify-between pt-3 border-t border-slate-100">
-                    <button onclick="hostResetToMenu()" class="px-4 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition">
+                <div id="host-footer-nav" class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
+                    <button onclick="hostResetToMenu()" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition">
                         ← Tukar Tahap
                     </button>
-                    <button id="btn-next-question" onclick="hostNextQuestion()" class="hidden px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold shadow-md transition">
+                    <button id="btn-next-question" onclick="hostNextQuestion()" class="hidden px-5 sm:px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-extrabold shadow-md transition">
                         Soalan Seterusnya →
                     </button>
                 </div>
@@ -196,12 +246,12 @@
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-4">🎉 Tahniah! Kuiz Tamat</h2>
                 <div class="w-36 h-36 rounded-full bg-blue-600 text-white flex flex-col items-center justify-center mx-auto mb-5 shadow-xl border-4 border-blue-200">
                     <span id="txt-final-score" class="text-5xl font-black">0</span>
-                    <span class="text-xs font-semibold opacity-90 mt-1">daripada 10</span>
+                    <span id="txt-total-questions" class="text-xs font-semibold opacity-90 mt-1">daripada 10</span>
                 </div>
-                <p id="txt-result-msg" class="text-base sm:text-lg text-slate-600 max-w-md mx-auto mb-6 font-medium"></p>
+                <p id="txt-result-msg" class="text-sm sm:text-lg text-slate-600 max-w-md mx-auto mb-6 font-medium"></p>
 
                 <!-- Butang Kawalan Tamat untuk Hos -->
-                <div id="host-result-actions" class="flex flex-wrap justify-center gap-3">
+                <div id="host-result-actions" class="flex flex-col sm:flex-row justify-center gap-3">
                     <button onclick="hostRestartSameMode()" class="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold shadow transition">
                         🔄 Main Semula Tahap Ini
                     </button>
@@ -211,25 +261,205 @@
                 </div>
 
                 <p id="viewer-result-notice" class="hidden text-sm text-slate-500 italic">
-                    Menunggu Hos (PC) untuk memulakan pusingan baharu...
+                    Menunggu Hos Program untuk memulakan pusingan baharu...
                 </p>
             </section>
 
         </main>
     </div>
 
-    <!-- KOTAK MESEJ NOTIFIKASI (Menggantikan alert()) -->
-    <div id="toast-box" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-3 rounded-2xl text-sm font-semibold shadow-xl opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+    <!-- MODAL PENGESAHAN KATA LALUAN HOS PROGRAM / ADMIN -->
+    <div id="password-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border-2 border-slate-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg sm:text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                    🔐 Log Masuk Hos / Admin
+                </h3>
+                <button onclick="closePasswordModal()" class="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold">✕</button>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-500 mb-4">
+                Sila masukkan kata laluan pentadbir untuk membuka panel kawalan program dan tetapan.
+            </p>
+
+            <div class="relative mb-3">
+                <input type="password" id="input-admin-password" placeholder="Masukkan kata laluan..." class="w-full pl-4 pr-12 py-3.5 rounded-2xl border-2 border-slate-300 focus:border-blue-600 outline-none text-base font-semibold" onkeypress="if(event.key==='Enter') verifyAdminPassword()">
+                <button type="button" onclick="togglePasswordVisibility('input-admin-password', 'eye-login-icon')" title="Tunjuk / Sembunyi Kata Laluan" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-slate-800 text-lg">
+                    <span id="eye-login-icon">👁️</span>
+                </button>
+            </div>
+            <p id="password-error-msg" class="hidden text-xs font-bold text-rose-600 mb-3">
+                ✖ Kata laluan tidak tepat. Sila cuba lagi.
+            </p>
+
+            <div class="flex gap-2 mt-4">
+                <button onclick="closePasswordModal()" class="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm">
+                    Batal
+                </button>
+                <button onclick="verifyAdminPassword()" class="flex-1 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow">
+                    Sahkan Masuk
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TETAPAN HOS PROGRAM / ADMIN (VERSI, TAJUK, KATA LALUAN, MUZIK LATAR & EDITOR SOALAN) -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-2.5 sm:p-5">
+        <div class="bg-white w-full max-w-3xl max-h-[92vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border-2 border-slate-200">
+            
+            <!-- Pengepala Modal Tetapan -->
+            <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-lg sm:text-xl font-extrabold">⚙️ Tetapan Hos Program / Admin</h3>
+                        <span class="bg-blue-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">v1.0</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Urus tajuk program, keselamatan, muzik latar & bank soalan di Cloud Firebase</p>
+                </div>
+                <button onclick="closeSettingsModal()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Tab Navigasi Tetapan -->
+            <div class="flex border-b border-slate-200 bg-slate-50 px-4 pt-3 gap-2 overflow-x-auto">
+                <button id="tab-btn-general" onclick="switchSettingsTab('general')" class="px-4 py-2.5 rounded-t-xl font-bold text-xs sm:text-sm bg-white text-blue-700 border-t border-x border-slate-200 whitespace-nowrap">
+                    🏷️ Umum & Keselamatan
+                </button>
+                <button id="tab-btn-music" onclick="switchSettingsTab('music')" class="px-4 py-2.5 rounded-t-xl font-bold text-xs sm:text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap">
+                    🎵 Muzik Latar
+                </button>
+                <button id="tab-btn-editor" onclick="switchSettingsTab('editor')" class="px-4 py-2.5 rounded-t-xl font-bold text-xs sm:text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap">
+                    📝 Editor Soalan (Tahap 1 & 2)
+                </button>
+            </div>
+
+            <!-- Kandungan Skrol Tetapan -->
+            <div class="p-5 overflow-y-auto flex-1 space-y-5">
+
+                <!-- TAB 1: TETAPAN UMUM (TAJUK PROGRAM, VERSI & KATA LALUAN) -->
+                <div id="tab-content-general" class="space-y-4">
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                            <div>
+                                <h4 class="font-extrabold text-slate-800 text-sm sm:text-base">Maklumat Sistem & Versi</h4>
+                                <p class="text-xs text-slate-500">Status binaan aplikasi masa nyata</p>
+                            </div>
+                            <span class="px-3 py-1 rounded-xl bg-blue-100 text-blue-800 font-black text-xs sm:text-sm">
+                                Versi Aplikasi: v1.0
+                            </span>
+                        </div>
+
+                        <!-- Tukar Tajuk Program -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Tajuk Program (Nama Lalai: "Pop Kuiz")</label>
+                            <input type="text" id="input-program-title" placeholder="Contoh: Pop Kuiz" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 outline-none text-sm font-semibold">
+                            <p class="text-[11px] text-slate-500 mt-1">Tajuk ini akan dipaparkan serta-merta pada pengepala semua peranti peserta dan hos.</p>
+                        </div>
+
+                        <!-- Tukar Kata Laluan Admin -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Kata Laluan Hos Program / Admin (Disimpan di Cloud)</label>
+                            <div class="relative">
+                                <input type="password" id="input-new-admin-password" placeholder="Masukkan kata laluan pentadbir..." class="w-full pl-3.5 pr-12 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 outline-none text-sm font-semibold">
+                                <button type="button" onclick="togglePasswordVisibility('input-new-admin-password', 'eye-setting-icon')" title="Tunjuk / Sembunyi Kata Laluan" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-800 text-base">
+                                    <span id="eye-setting-icon">👁️</span>
+                                </button>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1">Kata laluan lalai sistem ialah <code class="bg-slate-200 px-1 rounded">admin123</code>. Sila tukar dan simpan ke Cloud.</p>
+                        </div>
+
+                        <div class="pt-2">
+                            <button onclick="saveGeneralSettingsToCloud()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm shadow transition">
+                                💾 Simpan Tajuk & Kata Laluan ke Cloud
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- TAB 2: TETAPAN MUZIK LATAR -->
+                <div id="tab-content-music" class="hidden space-y-4">
+                    <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-3">
+                        <h4 class="font-extrabold text-blue-900 text-sm sm:text-base">Pautan URL Muzik Latar (MP3 / OGG / WAV)</h4>
+                        <p class="text-xs text-blue-800">
+                            Masukkan alamat URL fail audio terus. Peserta boleh menghidupkan atau mematikan muzik ini menggunakan ikon speaker di penjuru atas skrin mereka.
+                        </p>
+                        <input type="url" id="input-bgm-url" placeholder="https://contoh.com/lagu-kuiz.mp3" class="w-full px-3.5 py-2.5 rounded-xl border border-blue-300 focus:border-blue-600 outline-none text-sm">
+                        
+                        <div class="flex flex-wrap gap-2 pt-1">
+                            <button onclick="previewBgmLocal()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm transition">
+                                🎧 Preview Lagu (Lokal)
+                            </button>
+                            <button onclick="stopBgmPreview()" class="px-4 py-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition">
+                                ⏹ Henti Preview
+                            </button>
+                            <button onclick="saveBgmSettingsToCloud(true)" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm transition">
+                                ☁️ Simpan & Aktifkan Sesi
+                            </button>
+                            <button onclick="saveBgmSettingsToCloud(false)" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm transition">
+                                🔇 Nyahaktif Sesi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: EDITOR SOALAN DINAMIK -->
+                <div id="tab-content-editor" class="hidden space-y-4">
+                    <!-- Pemilih Mod Editor -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-100 p-3 rounded-2xl">
+                        <div class="flex gap-2">
+                            <button id="edit-mode-t1" onclick="switchEditorMode('tahap1')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-blue-600 text-white shadow">
+                                Mod Tahap 1 (Betul/Tidak)
+                            </button>
+                            <button id="edit-mode-t2" onclick="switchEditorMode('tahap2')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-white text-slate-700 border border-slate-200">
+                                Mod Tahap 2 (1 Soalan, 1 Jawapan)
+                            </button>
+                        </div>
+                        <button onclick="addEditorQuestion()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold shadow">
+                            + Tambah Soalan
+                        </button>
+                    </div>
+
+                    <!-- Senarai Kad Soalan Boleh Sunting -->
+                    <div id="editor-questions-list" class="space-y-3">
+                        <!-- Dijana secara dinamik oleh JS -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Pengaki Modal Tetapan -->
+            <div class="bg-slate-50 border-t border-slate-200 px-5 py-3.5 flex flex-wrap items-center justify-between gap-2">
+                <button onclick="resetDefaultQuestions()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200">
+                    ↺ Pulih Soalan Asal
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs sm:text-sm font-bold">
+                        Tutup
+                    </button>
+                    <button id="btn-save-questions" onclick="saveQuestionsToCloud()" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-extrabold shadow">
+                        💾 Simpan Semua Soalan ke Firebase
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ELEMEN AUDIO MUZIK LATAR -->
+    <audio id="bgm-player" loop preload="none"></audio>
+
+    <!-- KOTAK MESEJ NOTIFIKASI -->
+    <div id="toast-box" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-3 rounded-2xl text-xs sm:text-sm font-semibold shadow-xl opacity-0 pointer-events-none transition-opacity duration-300 z-50 text-center max-w-sm">
         Mesej sistem
     </div>
 
     <!-- SKRIP FIREBASE MODULAR & LOGIK PENYELARASAN MASA NYATA -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Konfigurasi Firebase dari lampiran pengguna
+        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDSqblFdWXAIg9IFV3EZN-iLKXhfkL0c2g",
             authDomain: "mysmartapps.firebaseapp.com",
@@ -240,23 +470,24 @@
             measurementId: "G-HCT2CJ7Y0L"
         };
 
-        // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // ID Khusus dan Laluan Firestore Patuh Peraturan
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'mysmartapps-kuiz';
-        // Menyokong parameter URL ?bilik=nama_bilik atau lalai 'kuiz-sekolah-utama' supaya semua peranti merujuk dokumen yang sama
         const urlParams = new URLSearchParams(window.location.search);
         const ROOM_ID = urlParams.get('bilik') || 'kuiz-sekolah-utama';
         document.getElementById('display-room-id').textContent = ROOM_ID;
 
-        // Laluan Dokumen Awam Serentak: /artifacts/{appId}/public/data/kuiz_live/{ROOM_ID}
+        // Dokumen Firestore Mandatori (Keadaan Sesi + Bank Soalan + Tetapan)
         const roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kuiz_live', ROOM_ID);
+        const bankDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kuiz_bank', ROOM_ID);
 
-        // Pangkalan Data Soalan Kuiz
-        const quizData = {
+        // Versi Semasa Aplikasi
+        const APP_VERSION = "v1.0";
+
+        // Bank Soalan Lalai (Disimpan ke Firebase jika belum wujud)
+        const defaultQuizBank = {
             tahap1: [
                 { q: "Hari Malaysia disambut pada setiap tarikh 16 September setiap tahun.", answer: true, note: "Betul! Hari Malaysia memperingati penubuhan persekutuan Malaysia pada 16 September 1963." },
                 { q: "Bendera Malaysia mempunyai 14 jalur merah dan putih serta 14 bucu pada bintangnya.", answer: true, note: "Betul! 14 jalur dan 14 bucu bintang melambangkan perpaduan 13 buah negeri dan Wilayah Persekutuan." },
@@ -280,29 +511,44 @@
                 { q: "Pada tahun berapakah Tanah Melayu diisytiharkan merdeka?", answer: "1957 (31 Ogos 1957)", keywords: ["1957"] },
                 { q: "Sukan apakah yang paling popular di Malaysia di mana Datuk Lee Chong Wei dan Lee Zii Jia pernah mengharumkan nama negara?", answer: "Badminton", keywords: ["badminton"] },
                 { q: "Apakah nama jambatan ikonik yang menghubungkan Pulau Pinang dengan tanah besar Semenanjung Malaysia?", answer: "Jambatan Pulau Pinang", keywords: ["jambatan pulau pinang", "pulau pinang", "sultan abdul halim"] }
-            ]
+            ],
+            programTitle: "Pop Kuiz",
+            adminPassword: "admin123",
+            bgmUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+            bgmPlaying: false
         };
 
-        // Keadaan Lalai Sesi Awan
+        // Keadaan Lalai Sesi Masa Nyata
         const defaultRoomState = {
             screen: 'menu',          // 'menu' | 'quiz' | 'result'
             mode: 'tahap1',          // 'tahap1' | 'tahap2'
             questionIndex: 0,
             score: 0,
-            status: 'asking',        // 'asking' | 'revealed' | 'graded'
+            status: 'asking',        // 'asking' | 'revealed' | 'graded' | 'finished'
             feedbackType: 'none',    // 'none' | 'correct' | 'wrong' | 'info'
             feedbackTitle: '',
             feedbackDetail: '',
+            timerRunning: false,
+            timerEndTime: null,
+            timerRemaining: 30,
             lastUpdated: Date.now()
         };
 
         let currentUser = null;
         let currentState = { ...defaultRoomState };
-        // Auto-kesan peranan: skrin kecil (< 768px) lalai sebagai Paparan Telefon, PC lalai sebagai Hos
-        let userRole = window.innerWidth < 768 ? 'viewer' : 'host';
-        let lastSoundTimestamp = 0;
+        let liveQuizBank = JSON.parse(JSON.stringify(defaultQuizBank));
+        let draftQuizBank = JSON.parse(JSON.stringify(defaultQuizBank));
+        let editorActiveMode = 'tahap1';
 
-        // Penjana Audio Web (Tanpa URL luaran)
+        // Pandangan lalai ialah "Penjawab Soalan" (viewer) untuk semua pelayar pada awal bukaan
+        let userRole = 'viewer';
+        let isHostAuthenticated = false;
+        let localAudioEnabled = false;
+        let lastSoundTimestamp = 0;
+        let timerInterval = null;
+        let timeUpAlerted = false;
+
+        // Penjana Kesan Bunyi Web Audio API
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             try {
@@ -330,6 +576,14 @@
                     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
                     osc.start(now);
                     osc.stop(now + 0.35);
+                } else if (type === 'timeup') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.setValueAtTime(220, now + 0.2);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+                    osc.start(now);
+                    osc.stop(now + 0.45);
                 } else if (type === 'reveal') {
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(440, now);
@@ -338,23 +592,21 @@
                     osc.start(now);
                     osc.stop(now + 0.18);
                 }
-            } catch (e) {
-                // Abaikan jika browser menyekat autoplay audio sebelum interaksi
-            }
+            } catch (e) {}
         }
 
         function showToast(msg) {
             const toast = document.getElementById('toast-box');
             toast.textContent = msg;
             toast.classList.remove('opacity-0');
-            setTimeout(() => toast.classList.add('opacity-0'), 3000);
+            setTimeout(() => toast.classList.add('opacity-0'), 3200);
         }
 
-        // Fungsi Kemas Kini Keadaan ke Cloud Firestore
+        // Kemas kini Keadaan Sesi ke Cloud Firestore
         async function syncStateToCloud(newPartialState) {
             if (!currentUser) return;
             if (userRole !== 'host') {
-                showToast("Tukar ke mod 'Kawalan PC (Hos)' untuk mengawal kuiz.");
+                showToast("Sila tukar ke mod 'Hos Program / Admin' untuk mengawal sesi.");
                 return;
             }
             const updatedState = {
@@ -366,31 +618,172 @@
                 await setDoc(roomDocRef, updatedState);
             } catch (err) {
                 console.error("Ralat penyelarasan Cloud:", err);
-                showToast("Gagal menyelaraskan data ke awan. Sila semak sambungan.");
+                showToast("Gagal menyelaraskan data ke awan.");
             }
         }
 
-        // Penukar Peranan UI (Hos vs Paparan Telefon)
-        window.setRole = function(role) {
+        // ==========================================
+        // LOGIK KATA LALUAN & PENUKAR PERANAN
+        // ==========================================
+        window.requestRoleSwitch = function(role) {
+            if (role === 'viewer') {
+                applyRoleUI('viewer');
+                return;
+            }
+            // Jika sudah disahkan sebagai Hos dalam sesi pelayar ini, terus masuk
+            if (isHostAuthenticated) {
+                applyRoleUI('host');
+                return;
+            }
+            // Paparkan tetingkap kata laluan
+            const modal = document.getElementById('password-modal');
+            const inp = document.getElementById('input-admin-password');
+            const err = document.getElementById('password-error-msg');
+            inp.value = '';
+            inp.type = 'password';
+            document.getElementById('eye-login-icon').textContent = '👁️';
+            err.classList.add('hidden');
+            modal.classList.remove('hidden');
+            setTimeout(() => inp.focus(), 100);
+        };
+
+        window.closePasswordModal = function() {
+            document.getElementById('password-modal').classList.add('hidden');
+        };
+
+        window.togglePasswordVisibility = function(inputId, iconId) {
+            const inp = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                icon.textContent = '🙈';
+            } else {
+                inp.type = 'password';
+                icon.textContent = '👁️';
+            }
+        };
+
+        window.verifyAdminPassword = function() {
+            const entered = document.getElementById('input-admin-password').value;
+            const correctPwd = liveQuizBank.adminPassword || 'admin123';
+            if (entered === correctPwd) {
+                isHostAuthenticated = true;
+                closePasswordModal();
+                applyRoleUI('host');
+                showToast("Log masuk Hos Program / Admin berjaya!");
+            } else {
+                document.getElementById('password-error-msg').classList.remove('hidden');
+                playSound('wrong');
+            }
+        };
+
+        function applyRoleUI(role) {
             userRole = role;
             const hostBtn = document.getElementById('role-host-btn');
             const viewerBtn = document.getElementById('role-viewer-btn');
+            const settingsBtn = document.getElementById('btn-open-settings');
             const roleHint = document.getElementById('role-hint');
 
             if (role === 'host') {
-                hostBtn.className = "px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow";
-                viewerBtn.className = "px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white";
-                roleHint.textContent = "Mod Kawalan PC: Setiap tindakan anda akan dikemas kini serta-merta ke semua telefon bimbit.";
+                hostBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow";
+                viewerBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white";
+                settingsBtn.classList.remove('hidden');
+                roleHint.textContent = "Mod Hos Program / Admin: Kawal soalan, pemasa 30 saat, tajuk program & muzik latar secara masa nyata.";
             } else {
-                viewerBtn.className = "px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow";
-                hostBtn.className = "px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white";
-                roleHint.textContent = "Mod Paparan Telefon: Skrin ini diselaraskan secara langsung mengikut kawalan Hos PC.";
+                viewerBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow";
+                hostBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white";
+                settingsBtn.classList.add('hidden');
+                roleHint.textContent = "Mod Penjawab Soalan: Memaparkan soalan semasa secara langsung berserta pemasa mendatar 30 saat.";
             }
             renderUI();
+        }
+
+        // ==========================================
+        // LOGIK PEMASA MENDATAR 30 SAAT (REAL-TIME)
+        // ==========================================
+        window.hostStartTimer = function() {
+            const rem = currentState.timerRemaining > 0 ? currentState.timerRemaining : 30;
+            timeUpAlerted = false;
+            syncStateToCloud({
+                timerRunning: true,
+                timerEndTime: Date.now() + (rem * 1000),
+                timerRemaining: rem
+            });
         };
 
-        // Tindakan-Tindakan Kawalan Hos (PC)
+        window.hostPauseTimer = function() {
+            if (!currentState.timerRunning) return;
+            const left = Math.max(0, Math.ceil((currentState.timerEndTime - Date.now()) / 1000));
+            syncStateToCloud({
+                timerRunning: false,
+                timerEndTime: null,
+                timerRemaining: left
+            });
+        };
+
+        window.hostResetTimer = function() {
+            timeUpAlerted = false;
+            syncStateToCloud({
+                timerRunning: false,
+                timerEndTime: null,
+                timerRemaining: 30
+            });
+        };
+
+        function updateTimerDisplay() {
+            const barEl = document.getElementById('timer-bar-fill');
+            const textEl = document.getElementById('timer-seconds-text');
+            if (!barEl || !textEl) return;
+
+            let secondsLeft = 30;
+            if (currentState.timerRunning && currentState.timerEndTime) {
+                const msLeft = currentState.timerEndTime - Date.now();
+                secondsLeft = Math.max(0, msLeft / 1000);
+            } else {
+                secondsLeft = currentState.timerRemaining !== undefined ? currentState.timerRemaining : 30;
+            }
+
+            const displaySec = Math.ceil(secondsLeft);
+            const pct = Math.max(0, Math.min(100, (secondsLeft / 30) * 100));
+
+            textEl.textContent = `${displaySec}s`;
+            barEl.style.width = `${pct}%`;
+
+            barEl.classList.remove('bg-emerald-500', 'bg-amber-500', 'bg-rose-600');
+            if (secondsLeft > 15) {
+                barEl.classList.add('bg-emerald-500');
+                textEl.className = "text-base sm:text-lg font-black text-emerald-700 tabular-nums";
+            } else if (secondsLeft > 7) {
+                barEl.classList.add('bg-amber-500');
+                textEl.className = "text-base sm:text-lg font-black text-amber-600 tabular-nums";
+            } else {
+                barEl.classList.add('bg-rose-600');
+                textEl.className = "text-base sm:text-lg font-black text-rose-600 tabular-nums animate-pulse";
+            }
+
+            if (currentState.timerRunning && secondsLeft <= 0 && !timeUpAlerted) {
+                timeUpAlerted = true;
+                playSound('timeup');
+                if (userRole === 'host') {
+                    syncStateToCloud({
+                        timerRunning: false,
+                        timerEndTime: null,
+                        timerRemaining: 0
+                    });
+                }
+            }
+        }
+
+        // ==========================================
+        // LOGIK KAWALAN KUIZ HOS PROGRAM / ADMIN
+        // ==========================================
         window.hostStartQuiz = function(mode) {
+            const list = liveQuizBank[mode] || [];
+            if (list.length === 0) {
+                showToast("Tiada soalan dalam mod ini. Sila tambah soalan di Tetapan.");
+                return;
+            }
+            timeUpAlerted = false;
             syncStateToCloud({
                 screen: 'quiz',
                 mode: mode,
@@ -399,22 +792,27 @@
                 status: 'asking',
                 feedbackType: 'none',
                 feedbackTitle: '',
-                feedbackDetail: ''
+                feedbackDetail: '',
+                timerRunning: true,
+                timerEndTime: Date.now() + 30000,
+                timerRemaining: 30
             });
         };
 
         window.hostAnswerT1 = function(userChoice) {
             if (currentState.status !== 'asking') return;
-            const item = quizData.tahap1[currentState.questionIndex];
+            const item = liveQuizBank.tahap1[currentState.questionIndex];
             const isCorrect = (userChoice === item.answer);
             const newScore = isCorrect ? currentState.score + 1 : currentState.score;
 
             syncStateToCloud({
                 score: newScore,
                 status: 'graded',
+                timerRunning: false,
+                timerEndTime: null,
                 feedbackType: isCorrect ? 'correct' : 'wrong',
                 feedbackTitle: isCorrect ? '🎉 Tahniah, Jawapan Tepat!' : '😅 Kurang Tepat!',
-                feedbackDetail: item.note
+                feedbackDetail: item.note || (item.answer ? 'Jawapan: BETUL' : 'Jawapan: TIDAK')
             });
         };
 
@@ -423,16 +821,19 @@
             const inputEl = document.getElementById('input-t2-answer');
             const val = inputEl.value.trim().toLowerCase();
             if (!val) {
-                showToast("Sila taip jawapan murid atau tekan 'Papar Jawapan Sebenar'.");
+                showToast("Sila taip jawapan peserta atau tekan 'Papar Jawapan Sebenar'.");
                 return;
             }
-            const item = quizData.tahap2[currentState.questionIndex];
-            const isCorrect = item.keywords.some(kw => val.includes(kw));
+            const item = liveQuizBank.tahap2[currentState.questionIndex];
+            const kws = (item.keywords && item.keywords.length > 0) ? item.keywords : [item.answer.toLowerCase()];
+            const isCorrect = kws.some(kw => val.includes(kw.toLowerCase()));
             const newScore = isCorrect ? currentState.score + 1 : currentState.score;
 
             syncStateToCloud({
                 score: newScore,
                 status: 'graded',
+                timerRunning: false,
+                timerEndTime: null,
                 feedbackType: isCorrect ? 'correct' : 'wrong',
                 feedbackTitle: isCorrect ? '🎉 Betul! Jawapan diterima.' : '😅 Jawapan kurang tepat.',
                 feedbackDetail: `Jawapan penuh: ${item.answer}`
@@ -441,9 +842,11 @@
 
         window.hostRevealT2 = function() {
             if (currentState.status !== 'asking') return;
-            const item = quizData.tahap2[currentState.questionIndex];
+            const item = liveQuizBank.tahap2[currentState.questionIndex];
             syncStateToCloud({
                 status: 'revealed',
+                timerRunning: false,
+                timerEndTime: null,
                 feedbackType: 'info',
                 feedbackTitle: '💡 Jawapan Sebenar:',
                 feedbackDetail: item.answer
@@ -457,26 +860,32 @@
                 score: newScore,
                 status: 'graded',
                 feedbackType: isCorrect ? 'correct' : 'wrong',
-                feedbackTitle: isCorrect ? '🎉 Murid Menjawab Betul! (+1 Markah)' : '😅 Jawapan Kurang Tepat (0 Markah)',
+                feedbackTitle: isCorrect ? '🎉 Peserta Menjawab Betul! (+1 Markah)' : '😅 Jawapan Kurang Tepat (0 Markah)',
                 feedbackDetail: currentState.feedbackDetail
             });
         };
 
         window.hostNextQuestion = function() {
-            const list = quizData[currentState.mode];
+            const list = liveQuizBank[currentState.mode] || [];
             const nextIdx = currentState.questionIndex + 1;
             if (nextIdx < list.length) {
+                timeUpAlerted = false;
                 syncStateToCloud({
                     questionIndex: nextIdx,
                     status: 'asking',
                     feedbackType: 'none',
                     feedbackTitle: '',
-                    feedbackDetail: ''
+                    feedbackDetail: '',
+                    timerRunning: true,
+                    timerEndTime: Date.now() + 30000,
+                    timerRemaining: 30
                 });
             } else {
                 syncStateToCloud({
                     screen: 'result',
-                    status: 'finished'
+                    status: 'finished',
+                    timerRunning: false,
+                    timerEndTime: null
                 });
             }
         };
@@ -491,11 +900,320 @@
             });
         };
 
-        // Fungsi Render Antaramuka Berdasarkan Data Cloud
+        // ==========================================
+        // LOGIK MUZIK LATAR (IKON SKRIN & TETAPAN)
+        // ==========================================
+        window.toggleLocalAudio = function() {
+            localAudioEnabled = !localAudioEnabled;
+            updateAudioToggleButton();
+            syncBgmAudioPlayer();
+            if (localAudioEnabled) {
+                showToast("Muzik latar dihidupkan pada peranti ini.");
+            } else {
+                showToast("Muzik latar dimatikan pada peranti ini.");
+            }
+        };
+
+        function updateAudioToggleButton() {
+            const icon = document.getElementById('bgm-icon');
+            const label = document.getElementById('bgm-btn-label');
+            const btn = document.getElementById('btn-toggle-bgm');
+            if (localAudioEnabled) {
+                icon.textContent = '🔊';
+                label.textContent = 'Muzik: Hidup';
+                btn.classList.remove('bg-blue-800/80');
+                btn.classList.add('bg-emerald-600');
+            } else {
+                icon.textContent = '🔇';
+                label.textContent = 'Muzik: Mati';
+                btn.classList.remove('bg-emerald-600');
+                btn.classList.add('bg-blue-800/80');
+            }
+        }
+
+        window.previewBgmLocal = function() {
+            const url = document.getElementById('input-bgm-url').value.trim();
+            if (!url) {
+                showToast("Sila masukkan URL fail audio (MP3/OGG) terlebih dahulu.");
+                return;
+            }
+            const player = document.getElementById('bgm-player');
+            player.src = url;
+            player.volume = 0.5;
+            player.play()
+                .then(() => showToast("Memainkan preview lagu secara lokal..."))
+                .catch(() => showToast("Tidak dapat memainkan URL ini. Pastikan pautan terus ke fail audio."));
+        };
+
+        window.stopBgmPreview = function() {
+            const player = document.getElementById('bgm-player');
+            player.pause();
+            player.currentTime = 0;
+            syncBgmAudioPlayer();
+            showToast("Preview lagu dihentikan.");
+        };
+
+        window.saveBgmSettingsToCloud = async function(isPlaying) {
+            if (!currentUser) return;
+            const url = document.getElementById('input-bgm-url').value.trim();
+            try {
+                const updatedBank = {
+                    ...liveQuizBank,
+                    bgmUrl: url,
+                    bgmPlaying: isPlaying
+                };
+                await setDoc(bankDocRef, updatedBank);
+                if (isPlaying) {
+                    localAudioEnabled = true;
+                    updateAudioToggleButton();
+                }
+                showToast(isPlaying ? "Muzik latar disimpan & diaktifkan untuk sesi!" : "Muzik latar dinyahaktifkan.");
+            } catch (err) {
+                console.error(err);
+                showToast("Gagal menyimpan tetapan muzik ke Firebase.");
+            }
+        };
+
+        function syncBgmAudioPlayer() {
+            const player = document.getElementById('bgm-player');
+            const badge = document.getElementById('bgm-live-badge');
+
+            if (liveQuizBank.bgmPlaying && liveQuizBank.bgmUrl) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            if (localAudioEnabled && liveQuizBank.bgmUrl) {
+                if (player.src !== liveQuizBank.bgmUrl) {
+                    player.src = liveQuizBank.bgmUrl;
+                }
+                player.volume = 0.4;
+                if (player.paused) {
+                    player.play().catch(() => {});
+                }
+            } else {
+                if (!player.paused) player.pause();
+            }
+        }
+
+        // ==========================================
+        // LOGIK MODAL TETAPAN & EDITOR SOALAN FIREBASE
+        // ==========================================
+        window.openSettingsModal = function() {
+            if (userRole !== 'host' || !isHostAuthenticated) return;
+            draftQuizBank = JSON.parse(JSON.stringify(liveQuizBank));
+            document.getElementById('input-program-title').value = draftQuizBank.programTitle || 'Pop Kuiz';
+            document.getElementById('input-new-admin-password').value = draftQuizBank.adminPassword || 'admin123';
+            document.getElementById('input-new-admin-password').type = 'password';
+            document.getElementById('eye-setting-icon').textContent = '👁️';
+            document.getElementById('input-bgm-url').value = draftQuizBank.bgmUrl || '';
+            document.getElementById('settings-modal').classList.remove('hidden');
+            switchSettingsTab('general');
+            renderEditorList();
+        };
+
+        window.closeSettingsModal = function() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        };
+
+        window.switchSettingsTab = function(tab) {
+            const tabs = ['general', 'music', 'editor'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                const content = document.getElementById(`tab-content-${t}`);
+                if (t === tab) {
+                    btn.className = "px-4 py-2.5 rounded-t-xl font-bold text-xs sm:text-sm bg-white text-blue-700 border-t border-x border-slate-200 whitespace-nowrap";
+                    content.classList.remove('hidden');
+                } else {
+                    btn.className = "px-4 py-2.5 rounded-t-xl font-bold text-xs sm:text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap";
+                    content.classList.add('hidden');
+                }
+            });
+            // Butang simpan soalan di pengaki hanya aktif apabila di tab editor
+            const saveQBtn = document.getElementById('btn-save-questions');
+            if (tab === 'editor') saveQBtn.classList.remove('hidden');
+            else saveQBtn.classList.add('hidden');
+        };
+
+        window.saveGeneralSettingsToCloud = async function() {
+            if (!currentUser) return;
+            const newTitle = document.getElementById('input-program-title').value.trim() || 'Pop Kuiz';
+            const newPwd = document.getElementById('input-new-admin-password').value.trim();
+
+            if (!newPwd) {
+                showToast("Kata laluan tidak boleh dibiarkan kosong.");
+                return;
+            }
+
+            try {
+                const updatedBank = {
+                    ...liveQuizBank,
+                    programTitle: newTitle,
+                    adminPassword: newPwd
+                };
+                await setDoc(bankDocRef, updatedBank);
+                showToast("Tajuk program & kata laluan berjaya disimpan ke Cloud!");
+            } catch (err) {
+                console.error(err);
+                showToast("Gagal menyimpan tetapan umum ke Firebase.");
+            }
+        };
+
+        window.switchEditorMode = function(mode) {
+            editorActiveMode = mode;
+            const b1 = document.getElementById('edit-mode-t1');
+            const b2 = document.getElementById('edit-mode-t2');
+            if (mode === 'tahap1') {
+                b1.className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-blue-600 text-white shadow";
+                b2.className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-white text-slate-700 border border-slate-200";
+            } else {
+                b2.className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-amber-500 text-white shadow";
+                b1.className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-white text-slate-700 border border-slate-200";
+            }
+            renderEditorList();
+        };
+
+        window.addEditorQuestion = function() {
+            if (editorActiveMode === 'tahap1') {
+                draftQuizBank.tahap1.push({
+                    q: "Soalan baharu Betul atau Tidak...",
+                    answer: true,
+                    note: "Penerangan ringkas jawapan..."
+                });
+            } else {
+                draftQuizBank.tahap2.push({
+                    q: "Soalan baharu terbuka...",
+                    answer: "Jawapan Tepat",
+                    keywords: ["jawapan tepat"]
+                });
+            }
+            renderEditorList();
+            showToast("1 soalan baharu ditambah. Jangan lupa klik 'Simpan Semua Soalan ke Firebase'.");
+        };
+
+        window.removeEditorQuestion = function(index) {
+            if (draftQuizBank[editorActiveMode].length <= 1) {
+                showToast("Sekurang-kurangnya 1 soalan mesti dikekalkan.");
+                return;
+            }
+            draftQuizBank[editorActiveMode].splice(index, 1);
+            renderEditorList();
+        };
+
+        window.updateDraftField = function(index, field, value) {
+            if (field === 'answer' && editorActiveMode === 'tahap1') {
+                draftQuizBank.tahap1[index].answer = (value === 'true');
+            } else if (field === 'keywords') {
+                draftQuizBank.tahap2[index].keywords = value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+            } else {
+                draftQuizBank[editorActiveMode][index][field] = value;
+            }
+        };
+
+        function renderEditorList() {
+            const container = document.getElementById('editor-questions-list');
+            const list = draftQuizBank[editorActiveMode] || [];
+            container.innerHTML = '';
+
+            list.forEach((item, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5";
+
+                if (editorActiveMode === 'tahap1') {
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-blue-700 uppercase">Soalan #${idx + 1} (Tahap 1)</span>
+                            <button onclick="removeEditorQuestion(${idx})" class="text-xs font-bold text-rose-600 hover:bg-rose-100 px-2.5 py-1 rounded-lg">🗑️ Buang</button>
+                        </div>
+                        <input type="text" value="${escapeHtml(item.q)}" oninput="updateDraftField(${idx}, 'q', this.value)" placeholder="Tulis pernyataan soalan..." class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-medium">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Jawapan Tepat</label>
+                                <select onchange="updateDraftField(${idx}, 'answer', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold bg-white">
+                                    <option value="true" ${item.answer === true ? 'selected' : ''}>✔ BETUL</option>
+                                    <option value="false" ${item.answer === false ? 'selected' : ''}>✖ TIDAK</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Nota Penerangan</label>
+                                <input type="text" value="${escapeHtml(item.note || '')}" oninput="updateDraftField(${idx}, 'note', this.value)" placeholder="Penerangan jawapan..." class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const kwString = Array.isArray(item.keywords) ? item.keywords.join(', ') : '';
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-amber-700 uppercase">Soalan #${idx + 1} (Tahap 2)</span>
+                            <button onclick="removeEditorQuestion(${idx})" class="text-xs font-bold text-rose-600 hover:bg-rose-100 px-2.5 py-1 rounded-lg">🗑️ Buang</button>
+                        </div>
+                        <input type="text" value="${escapeHtml(item.q)}" oninput="updateDraftField(${idx}, 'q', this.value)" placeholder="Tulis soalan terbuka..." class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-medium">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Jawapan Penuh</label>
+                                <input type="text" value="${escapeHtml(item.answer)}" oninput="updateDraftField(${idx}, 'answer', this.value)" placeholder="Jawapan sebenar..." class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Kata Kunci Semakan (asingkan koma)</label>
+                                <input type="text" value="${escapeHtml(kwString)}" oninput="updateDraftField(${idx}, 'keywords', this.value)" placeholder="contoh: kuala lumpur, kl" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                            </div>
+                        </div>
+                    `;
+                }
+                container.appendChild(card);
+            });
+        }
+
+        window.saveQuestionsToCloud = async function() {
+            if (!currentUser) return;
+            try {
+                const payload = {
+                    ...liveQuizBank,
+                    tahap1: draftQuizBank.tahap1,
+                    tahap2: draftQuizBank.tahap2
+                };
+                await setDoc(bankDocRef, payload);
+                showToast("Semua soalan Tahap 1 & Tahap 2 berjaya disimpan ke Firebase!");
+                closeSettingsModal();
+            } catch (err) {
+                console.error(err);
+                showToast("Gagal menyimpan bank soalan ke Firebase.");
+            }
+        };
+
+        window.resetDefaultQuestions = function() {
+            draftQuizBank.tahap1 = JSON.parse(JSON.stringify(defaultQuizBank.tahap1));
+            draftQuizBank.tahap2 = JSON.parse(JSON.stringify(defaultQuizBank.tahap2));
+            renderEditorList();
+            showToast("Soalan asal dipulihkan ke editor. Klik 'Simpan Semua Soalan' untuk sahkan.");
+        };
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        // ==========================================
+        // FUNGSI RENDER ANTARAMUKA UTAMA
+        // ==========================================
         function renderUI() {
             const isHost = (userRole === 'host');
 
-            // Sembunyikan semua skrin dahulu
+            // Kemas kini tajuk program & dokumen dari Firebase
+            const progTitle = liveQuizBank.programTitle || 'Pop Kuiz';
+            document.getElementById('main-program-title').textContent = `🏆 ${progTitle}`;
+            document.title = `${progTitle} (Masa Nyata)`;
+
+            // Kemas kini bilangan soalan pada kad menu
+            const t1Count = (liveQuizBank.tahap1 || []).length;
+            const t2Count = (liveQuizBank.tahap2 || []).length;
+            document.getElementById('count-t1-badge').textContent = `${t1Count} Soalan`;
+            document.getElementById('count-t2-badge').textContent = `${t2Count} Soalan`;
+
             document.getElementById('view-menu').classList.add('hidden');
             document.getElementById('view-quiz').classList.add('hidden');
             document.getElementById('view-result').classList.add('hidden');
@@ -511,7 +1229,7 @@
                     document.getElementById('menu-subtext').textContent = "Klik salah satu mod di bawah untuk memulakan sesi kuiz serentak.";
                 } else {
                     document.getElementById('viewer-waiting-banner').classList.remove('hidden');
-                    document.getElementById('menu-subtext').textContent = "Sesi kuiz sedia diselaraskan secara automatik.";
+                    document.getElementById('menu-subtext').textContent = "Paparan Penjawab Soalan sedia diselaraskan secara automatik.";
                 }
                 return;
             }
@@ -520,11 +1238,11 @@
             if (currentState.screen === 'quiz') {
                 document.getElementById('view-quiz').classList.remove('hidden');
 
-                const modeList = quizData[currentState.mode] || quizData.tahap1;
-                const qIndex = Math.min(currentState.questionIndex, modeList.length - 1);
-                const item = modeList[qIndex];
+                const modeList = liveQuizBank[currentState.mode] || liveQuizBank.tahap1;
+                const totalQ = modeList.length || 1;
+                const qIndex = Math.min(currentState.questionIndex, totalQ - 1);
+                const item = modeList[qIndex] || { q: "Tiada soalan", answer: true };
 
-                // Lencana & Skor
                 const badgeEl = document.getElementById('badge-active-mode');
                 if (currentState.mode === 'tahap1') {
                     badgeEl.textContent = "Mod Tahap 1 (Betul / Tidak)";
@@ -534,17 +1252,19 @@
                     badgeEl.className = "px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-amber-100 text-amber-800";
                 }
 
-                document.getElementById('txt-progress').textContent = `Soalan ${qIndex + 1} / ${modeList.length}`;
+                document.getElementById('txt-progress').textContent = `Soalan ${qIndex + 1} / ${totalQ}`;
                 document.getElementById('txt-score').textContent = currentState.score;
-                document.getElementById('bar-progress').style.width = `${((qIndex + 1) / modeList.length) * 100}%`;
                 document.getElementById('txt-question').textContent = `${qIndex + 1}. ${item.q}`;
 
-                // Paparan Kawalan Hos vs Viewer
+                updateTimerDisplay();
+
+                const hostTimerControls = document.getElementById('host-timer-controls');
                 const hostControlsArea = document.getElementById('host-controls-area');
                 const viewerQuizNotice = document.getElementById('viewer-quiz-notice');
                 const hostFooterNav = document.getElementById('host-footer-nav');
 
                 if (isHost) {
+                    hostTimerControls.classList.remove('hidden');
                     hostControlsArea.classList.remove('hidden');
                     viewerQuizNotice.classList.add('hidden');
                     hostFooterNav.classList.remove('hidden');
@@ -566,21 +1286,21 @@
                         document.getElementById('btn-t2-reveal').disabled = locked;
                     }
 
-                    // Butang Soalan Seterusnya hanya muncul selepas selesai dinilai
                     const nextBtn = document.getElementById('btn-next-question');
                     if (currentState.status === 'graded') {
                         nextBtn.classList.remove('hidden');
-                        nextBtn.textContent = (qIndex + 1 === modeList.length) ? "Lihat Keputusan Akhir →" : "Soalan Seterusnya →";
+                        nextBtn.textContent = (qIndex + 1 === totalQ) ? "Lihat Keputusan Akhir →" : "Soalan Seterusnya →";
                     } else {
                         nextBtn.classList.add('hidden');
                     }
                 } else {
+                    hostTimerControls.classList.add('hidden');
                     hostControlsArea.classList.add('hidden');
                     viewerQuizNotice.classList.remove('hidden');
                     hostFooterNav.classList.add('hidden');
                 }
 
-                // Panel Maklum Balas / Jawapan (Dipaparkan serentak pada PC & Telefon)
+                // Panel Maklum Balas / Jawapan
                 const fbPanel = document.getElementById('feedback-panel');
                 const manualJudge = document.getElementById('host-manual-judge');
 
@@ -598,7 +1318,6 @@
                     document.getElementById('fb-title').textContent = currentState.feedbackTitle;
                     document.getElementById('fb-detail').textContent = currentState.feedbackDetail;
 
-                    // Butang pengesahan manual hanya muncul untuk Hos ketika status 'revealed'
                     if (isHost && currentState.status === 'revealed') {
                         manualJudge.classList.remove('hidden');
                     } else {
@@ -614,12 +1333,15 @@
             // 3. SKRIN KEPUTUSAN AKHIR
             if (currentState.screen === 'result') {
                 document.getElementById('view-result').classList.remove('hidden');
+                const totalQ = (liveQuizBank[currentState.mode] || []).length || 10;
                 document.getElementById('txt-final-score').textContent = currentState.score;
+                document.getElementById('txt-total-questions').textContent = `daripada ${totalQ}`;
 
+                const ratio = currentState.score / totalQ;
                 const msgEl = document.getElementById('txt-result-msg');
-                if (currentState.score >= 8) {
+                if (ratio >= 0.8) {
                     msgEl.textContent = "Cemerlang! Pengetahuan sejarah dan isu semasa sangat hebat! 🌟";
-                } else if (currentState.score >= 5) {
+                } else if (ratio >= 0.5) {
                     msgEl.textContent = "Syabas! Usaha yang bagus, teruskan membaca untuk tingkatkan ilmu. 👏";
                 } else {
                     msgEl.textContent = "Jangan putus asa! Cuba main semula untuk mengukuhkan ingatan. 💪";
@@ -635,46 +1357,53 @@
             }
         }
 
-        // PROSES BOOTSTRAP ASYNCHRONOUS (Elak Race Condition dengan Skrin Loading)
+        // ==========================================
+        // BOOTSTRAP ASYNCHRONOUS (ELAK RACE CONDITION)
+        // ==========================================
         async function initializeRealtimeApp() {
             const loadingOverlay = document.getElementById('loading-overlay');
             const loadingStatus = document.getElementById('loading-status');
             const appContainer = document.getElementById('app-container');
 
             try {
-                // Langkah 1: Pengesahan Pengguna (Gunakan signInAnonymously untuk projek Firebase khusus)
                 loadingStatus.textContent = "Mengesahkan sambungan keselamatan Firebase...";
                 const cred = await signInAnonymously(auth);
                 currentUser = cred.user;
-
                 if (!currentUser) throw new Error("Pengesahan pengguna gagal.");
 
-                // Langkah 2: Muat Turun Keadaan Awal dari Firestore (Await getDoc)
-                loadingStatus.textContent = `Memuat turun data bilik "${ROOM_ID}" dari Cloud...`;
-                const initialSnap = await getDoc(roomDocRef);
+                loadingStatus.textContent = `Memuat turun bank soalan & tetapan "${ROOM_ID}"...`;
+                const [initialRoomSnap, initialBankSnap] = await Promise.all([
+                    getDoc(roomDocRef),
+                    getDoc(bankDocRef)
+                ]);
 
-                if (initialSnap.exists()) {
-                    currentState = { ...defaultRoomState, ...initialSnap.data() };
+                if (initialBankSnap.exists()) {
+                    liveQuizBank = { ...defaultQuizBank, ...initialBankSnap.data() };
                 } else {
-                    // Cipta dokumen awal jika belum wujud
+                    await setDoc(bankDocRef, defaultQuizBank);
+                    liveQuizBank = JSON.parse(JSON.stringify(defaultQuizBank));
+                }
+
+                if (initialRoomSnap.exists()) {
+                    currentState = { ...defaultRoomState, ...initialRoomSnap.data() };
+                } else {
                     await setDoc(roomDocRef, defaultRoomState);
                     currentState = { ...defaultRoomState };
                 }
 
-                // Set peranan awal UI berdasarkan saiz peranti
-                window.setRole(userRole);
+                // Pandangan pertama / lalai ialah Penjawab Soalan (viewer)
+                applyRoleUI('viewer');
                 lastSoundTimestamp = currentState.lastUpdated || Date.now();
+                syncBgmAudioPlayer();
 
-                // Langkah 3: Pasang Pendengar Masa Nyata (onSnapshot)
+                // Pendengar Masa Nyata untuk Sesi Kuiz
                 onSnapshot(roomDocRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const incoming = docSnap.data();
                         const isNewUpdate = incoming.lastUpdated && incoming.lastUpdated > lastSoundTimestamp;
-
                         currentState = { ...defaultRoomState, ...incoming };
                         renderUI();
 
-                        // Mainkan bunyi maklum balas apabila kemas kini baharu diterima
                         if (isNewUpdate) {
                             lastSoundTimestamp = incoming.lastUpdated;
                             if (incoming.feedbackType === 'correct') playSound('correct');
@@ -683,11 +1412,24 @@
                         }
                     }
                 }, (error) => {
-                    console.error("Ralat pendengar masa nyata:", error);
-                    showToast("Sambungan masa nyata terganggu. Menyambung semula...");
+                    console.error("Ralat pendengar sesi:", error);
                 });
 
-                // Langkah 4: Sembunyikan Skrin Loading & Paparkan UI Utama selepas data siap sedia
+                // Pendengar Masa Nyata untuk Bank Soalan, Tajuk Program, Kata Laluan & Muzik Latar
+                onSnapshot(bankDocRef, (bankSnap) => {
+                    if (bankSnap.exists()) {
+                        liveQuizBank = { ...defaultQuizBank, ...bankSnap.data() };
+                        syncBgmAudioPlayer();
+                        renderUI();
+                    }
+                }, (error) => {
+                    console.error("Ralat pendengar bank soalan:", error);
+                });
+
+                // Selang kemas kini visual bar pemasa mendatar 30 saat
+                timerInterval = setInterval(updateTimerDisplay, 200);
+
+                // Sembunyikan Skrin Loading selepas kesemua data Cloud siap dimuat turun
                 loadingOverlay.classList.add('hidden');
                 appContainer.classList.remove('hidden');
 
@@ -697,7 +1439,6 @@
             }
         }
 
-        // Mulakan bootstrap aplikasi apabila halaman dimuatkan
         window.addEventListener('DOMContentLoaded', initializeRealtimeApp);
     </script>
 </body>
