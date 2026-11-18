@@ -58,10 +58,12 @@
                             Live • Bilik: <span id="display-room-id" class="text-amber-300">kuiz-sekolah-utama</span>
                         </span>
                     </div>
-                    <h1 id="main-program-title" class="text-xl sm:text-3xl font-extrabold mt-2 tracking-tight">🏆 Pop Kuiz</h1>
+                    <h1 id="main-program-title" class="text-2xl sm:text-3xl font-black tracking-tight mt-1.5">
+                        🏆 Pop Kuiz
+                    </h1>
                 </div>
 
-                <!-- Penukar Peranan & Ikon Tetapan (Ikon muzik dibuang, dikawal penuh oleh Hos) -->
+                <!-- Penukar Peranan, Ikon Muzik & Ikon Tetapan -->
                 <div class="flex flex-wrap items-center gap-2 self-start md:self-center">
                     <div class="flex items-center bg-blue-800/70 p-1 rounded-2xl">
                         <button id="role-viewer-btn" onclick="requestRoleSwitch('viewer')" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow">
@@ -71,6 +73,11 @@
                             🎛️ Hos Program / Admin
                         </button>
                     </div>
+
+                    <!-- Ikon Kecil Main/Henti Muzik Latar (Sebaris dengan Ikon Tetapan Admin) -->
+                    <button id="btn-toggle-bgm" onclick="handleToggleBgm()" title="Mainkan / Hentikan Lagu Latar" class="p-2.5 rounded-2xl bg-blue-800/80 hover:bg-blue-700 text-white font-bold shadow transition">
+                        🔊
+                    </button>
 
                     <!-- Ikon Tetapan (Hanya muncul apabila dalam mod Hos Program / Admin) -->
                     <button id="btn-open-settings" onclick="openSettingsModal()" title="Tetapan Hos, Muzik & Editor Soalan" class="hidden p-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold shadow transition">
@@ -321,7 +328,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h3 class="text-lg sm:text-xl font-extrabold">⚙️ Tetapan Hos Program / Admin</h3>
-                        <span class="bg-blue-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">v1.2</span>
+                        <span class="bg-blue-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">v1.3</span>
                     </div>
                     <p class="text-xs text-slate-400">Urus tajuk program, keselamatan, muzik latar & status soalan di Cloud Firebase</p>
                 </div>
@@ -355,7 +362,7 @@
                                 <p class="text-xs text-slate-500">Status binaan aplikasi masa nyata</p>
                             </div>
                             <span class="px-3 py-1 rounded-xl bg-blue-100 text-blue-800 font-black text-xs sm:text-sm">
-                                Versi Aplikasi: v1.2
+                                Versi Aplikasi: v1.3
                             </span>
                         </div>
 
@@ -499,7 +506,7 @@
         const bankDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kuiz_bank', ROOM_ID);
 
         // Versi Semasa Aplikasi
-        const APP_VERSION = "v1.2";
+        const APP_VERSION = "v1.3";
 
         // Bank Soalan Lalai (Dilengkapi medan 'completed: false' untuk elak ulangan)
         const defaultQuizBank = {
@@ -558,6 +565,7 @@
         // Pandangan lalai ialah "Penjawab Soalan" (viewer) untuk semua pelayar pada awal bukaan
         let userRole = 'viewer';
         let isHostAuthenticated = false;
+        let isViewerMuted = false; // Kawalan senyap lokal khusus pada skrin Penjawab Soalan
         let lastSoundTimestamp = 0;
         let timerInterval = null;
         let timeUpAlerted = false;
@@ -637,28 +645,25 @@
         }
 
         // ==========================================
-        // LOGIK KATA LALUAN & PENUKAR PERANAN
+        // KAWALAN PERANAN, KATA LALUAN & PEMASA 30 SAAT
         // ==========================================
         window.requestRoleSwitch = function(role) {
             if (role === 'viewer') {
                 applyRoleUI('viewer');
                 return;
             }
-            // Jika sudah disahkan sebagai Hos dalam sesi pelayar ini, terus masuk
-            if (isHostAuthenticated) {
-                applyRoleUI('host');
-                return;
+            if (role === 'host') {
+                if (isHostAuthenticated) {
+                    applyRoleUI('host');
+                } else {
+                    document.getElementById('input-admin-password').value = '';
+                    document.getElementById('input-admin-password').type = 'password';
+                    document.getElementById('eye-login-icon').textContent = '👁️';
+                    document.getElementById('password-error-msg').classList.add('hidden');
+                    document.getElementById('password-modal').classList.remove('hidden');
+                    setTimeout(() => document.getElementById('input-admin-password').focus(), 100);
+                }
             }
-            // Paparkan tetingkap kata laluan
-            const modal = document.getElementById('password-modal');
-            const inp = document.getElementById('input-admin-password');
-            const err = document.getElementById('password-error-msg');
-            inp.value = '';
-            inp.type = 'password';
-            document.getElementById('eye-login-icon').textContent = '👁️';
-            err.classList.add('hidden');
-            modal.classList.remove('hidden');
-            setTimeout(() => inp.focus(), 100);
         };
 
         window.closePasswordModal = function() {
@@ -668,6 +673,7 @@
         window.togglePasswordVisibility = function(inputId, iconId) {
             const inp = document.getElementById(inputId);
             const icon = document.getElementById(iconId);
+            if (!inp || !icon) return;
             if (inp.type === 'password') {
                 inp.type = 'text';
                 icon.textContent = '🙈';
@@ -687,174 +693,98 @@
                 showToast("Log masuk Hos Program / Admin berjaya!");
             } else {
                 document.getElementById('password-error-msg').classList.remove('hidden');
-                playSound('wrong');
             }
         };
 
         function applyRoleUI(role) {
             userRole = role;
-            const hostBtn = document.getElementById('role-host-btn');
-            const viewerBtn = document.getElementById('role-viewer-btn');
+            const vBtn = document.getElementById('role-viewer-btn');
+            const hBtn = document.getElementById('role-host-btn');
             const settingsBtn = document.getElementById('btn-open-settings');
-            const roleHint = document.getElementById('role-hint');
+            const hint = document.getElementById('role-hint');
 
             if (role === 'host') {
-                hostBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow";
-                viewerBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white";
+                hBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow";
+                vBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white";
                 settingsBtn.classList.remove('hidden');
-                roleHint.textContent = "Mod Hos Program / Admin: Kawal soalan, pemasa 30 saat, tajuk program & muzik latar secara masa nyata.";
+                hint.textContent = "Mod Hos Program / Admin: Kawal sesi kuiz, pemasa 30 saat, muzik latar, dan lihat jawapan rujukan.";
             } else {
-                viewerBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow";
-                hostBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white";
+                vBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-blue-700 shadow";
+                hBtn.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition text-blue-100 hover:text-white";
                 settingsBtn.classList.add('hidden');
-                roleHint.textContent = "Mod Penjawab Soalan: Memaparkan soalan semasa secara langsung berserta pemasa mendatar 30 saat.";
+                hint.textContent = "Mod Penjawab Soalan: Memaparkan soalan semasa secara langsung berserta pemasa mendatar 30 saat.";
             }
+            syncBgmAudioPlayer();
             renderUI();
         }
 
-        // ==========================================
-        // LOGIK PEMASA MENDATAR 30 SAAT (REAL-TIME)
-        // ==========================================
-        window.hostStartTimer = function() {
-            const rem = currentState.timerRemaining > 0 ? currentState.timerRemaining : 30;
-            timeUpAlerted = false;
-            syncStateToCloud({
-                timerRunning: true,
-                timerEndTime: Date.now() + (rem * 1000),
-                timerRemaining: rem
-            });
-        };
-
-        window.hostPauseTimer = function() {
-            if (!currentState.timerRunning) return;
-            const left = Math.max(0, Math.ceil((currentState.timerEndTime - Date.now()) / 1000));
-            syncStateToCloud({
-                timerRunning: false,
-                timerEndTime: null,
-                timerRemaining: left
-            });
-        };
-
-        window.hostResetTimer = function() {
-            timeUpAlerted = false;
-            syncStateToCloud({
-                timerRunning: false,
-                timerEndTime: null,
-                timerRemaining: 30
-            });
-        };
+        function getRemainingSeconds() {
+            if (currentState.timerRunning && currentState.timerEndTime && !currentState.gamePaused) {
+                const diff = (currentState.timerEndTime - Date.now()) / 1000;
+                return Math.max(0, diff);
+            }
+            return Math.max(0, Number(currentState.timerRemaining ?? 30));
+        }
 
         function updateTimerDisplay() {
-            const barEl = document.getElementById('timer-bar-fill');
-            const textEl = document.getElementById('timer-seconds-text');
-            if (!barEl || !textEl) return;
+            const rem = getRemainingSeconds();
+            const pct = Math.min(100, Math.max(0, (rem / 30) * 100));
+            const bar = document.getElementById('timer-bar-fill');
+            const txt = document.getElementById('timer-seconds-text');
 
-            let secondsLeft = 30;
-            if (currentState.timerRunning && !currentState.gamePaused && currentState.timerEndTime) {
-                const msLeft = currentState.timerEndTime - Date.now();
-                secondsLeft = Math.max(0, msLeft / 1000);
+            if (!bar || !txt) return;
+
+            bar.style.width = `${pct}%`;
+            txt.textContent = `${Math.ceil(rem)}s`;
+
+            bar.classList.remove('bg-emerald-500', 'bg-amber-500', 'bg-rose-600');
+            txt.classList.remove('text-blue-700', 'text-amber-600', 'text-rose-600');
+
+            if (rem > 15) {
+                bar.classList.add('bg-emerald-500');
+                txt.classList.add('text-blue-700');
+            } else if (rem > 7) {
+                bar.classList.add('bg-amber-500');
+                txt.classList.add('text-amber-600');
             } else {
-                secondsLeft = currentState.timerRemaining !== undefined ? currentState.timerRemaining : 30;
+                bar.classList.add('bg-rose-600');
+                txt.classList.add('text-rose-600');
             }
 
-            const pct = Math.max(0, Math.min(100, (secondsLeft / 30) * 100));
-            barEl.style.width = `${pct}%`;
-            textEl.textContent = `${Math.ceil(secondsLeft)}s`;
-
-            barEl.classList.remove('bg-emerald-500', 'bg-amber-500', 'bg-rose-600');
-            if (secondsLeft > 15) {
-                barEl.classList.add('bg-emerald-500');
-            } else if (secondsLeft > 7) {
-                barEl.classList.add('bg-amber-500');
-            } else {
-                barEl.classList.add('bg-rose-600');
-            }
-
-            if (currentState.timerRunning && !currentState.gamePaused && secondsLeft <= 0 && !timeUpAlerted) {
+            if (rem <= 0 && currentState.timerRunning && !timeUpAlerted) {
                 timeUpAlerted = true;
                 playSound('timeup');
-                if (userRole === 'host') {
-                    syncStateToCloud({
-                        timerRunning: false,
-                        timerEndTime: null,
-                        timerRemaining: 0
-                    });
-                }
+            } else if (rem > 0) {
+                timeUpAlerted = false;
             }
         }
 
         // ==========================================
-        // LOGIK HENTI & SAMBUNG PERMAINAN (HOS SAHAJA)
+        // TINDAKAN KAWALAN HOS PROGRAM (MASA NYATA)
         // ==========================================
-        window.hostToggleGamePause = function() {
-            if (userRole !== 'host' || currentState.screen !== 'quiz') return;
-
-            if (!currentState.gamePaused) {
-                // Hentikan permainan sementara & simpan baki masa pemasa semasa
-                let remaining = currentState.timerRemaining !== undefined ? currentState.timerRemaining : 30;
-                if (currentState.timerRunning && currentState.timerEndTime) {
-                    remaining = Math.max(0, Math.ceil((currentState.timerEndTime - Date.now()) / 1000));
-                }
-                syncStateToCloud({
-                    gamePaused: true,
-                    timerRunning: false,
-                    timerEndTime: null,
-                    timerRemaining: remaining
-                });
-                showToast("Permainan dihentikan sementara.");
-            } else {
-                // Sambung permainan semula
-                const rem = currentState.timerRemaining > 0 ? currentState.timerRemaining : 30;
-                const shouldResumeTimer = (currentState.status === 'asking' && rem > 0);
-                syncStateToCloud({
-                    gamePaused: false,
-                    timerRunning: shouldResumeTimer,
-                    timerEndTime: shouldResumeTimer ? Date.now() + (rem * 1000) : null,
-                    timerRemaining: rem
-                });
-                showToast("Permainan disambung semula!");
-            }
-        };
-
-        // ==========================================
-        // LOGIK KAWALAN KUIZ HOS PROGRAM / ADMIN
-        // ==========================================
-        function findNextUncompletedIndex(mode, startAfterIndex = -1) {
+        window.hostStartQuiz = async function(mode) {
+            if (userRole !== 'host') return;
             const list = liveQuizBank[mode] || [];
-            // Cari soalan belum selesai selepas indeks semasa
-            for (let i = startAfterIndex + 1; i < list.length; i++) {
-                if (!list[i].completed) return i;
-            }
-            // Jika tiada di bahagian belakang, semak dari awal senarai
-            for (let i = 0; i <= startAfterIndex && i < list.length; i++) {
-                if (!list[i].completed) return i;
-            }
-            return -1; // Semua soalan dalam mod ini telah selesai
-        }
+            const nextUncompletedIdx = list.findIndex(q => !q.completed);
 
-        window.hostStartQuiz = function(mode) {
-            const list = liveQuizBank[mode] || [];
-            if (list.length === 0) {
-                showToast("Tiada soalan dalam mod ini. Sila tambah soalan di Tetapan.");
-                return;
-            }
-            const nextIdx = findNextUncompletedIndex(mode, -1);
-            if (nextIdx === -1) {
-                showToast("Semua soalan dalam mod ini telah selesai! Sila nyahtanda status 'Selesai' di Tetapan.");
-                syncStateToCloud({
+            if (nextUncompletedIdx === -1) {
+                await syncStateToCloud({
                     screen: 'result',
                     mode: mode,
                     status: 'finished',
+                    gamePaused: false,
                     timerRunning: false,
-                    timerEndTime: null
+                    timerEndTime: null,
+                    timerRemaining: 30
                 });
+                showToast("Semua soalan untuk tahap ini telah selesai.");
                 return;
             }
-            timeUpAlerted = false;
-            syncStateToCloud({
+
+            await syncStateToCloud({
                 screen: 'quiz',
                 mode: mode,
-                questionIndex: nextIdx,
+                questionIndex: nextUncompletedIdx,
                 status: 'asking',
                 gamePaused: false,
                 feedbackType: 'none',
@@ -866,49 +796,115 @@
             });
         };
 
-        // Tandakan soalan semasa sebagai 'Selesai' di Firebase dan sahkan keputusan Betul/Salah secara lisan
-        window.hostJudgeAnswer = async function(isCorrect) {
-            if (currentState.status !== 'asking' || userRole !== 'host') return;
-            const mode = currentState.mode;
-            const qIdx = currentState.questionIndex;
-            const list = liveQuizBank[mode] || [];
-            const item = list[qIdx];
-            if (!item) return;
-
-            // Tandakan soalan ini sebagai 'completed: true' di Cloud Firestore supaya tidak berulang
-            try {
-                const updatedList = list.map((qItem, idx) =>
-                    idx === qIdx ? { ...qItem, completed: true } : qItem
-                );
-                const updatedBank = {
-                    ...liveQuizBank,
-                    [mode]: updatedList
-                };
-                await setDoc(bankDocRef, updatedBank);
-            } catch (err) {
-                console.error("Gagal menanda soalan selesai:", err);
+        window.hostToggleGamePause = async function() {
+            if (userRole !== 'host') return;
+            const willPause = !currentState.gamePaused;
+            if (willPause) {
+                const rem = getRemainingSeconds();
+                await syncStateToCloud({
+                    gamePaused: true,
+                    timerRunning: false,
+                    timerEndTime: null,
+                    timerRemaining: rem
+                });
+                showToast("Permainan dihentikan sementara.");
+            } else {
+                const rem = Math.max(1, Number(currentState.timerRemaining || 30));
+                const shouldRunTimer = (currentState.status === 'asking');
+                await syncStateToCloud({
+                    gamePaused: false,
+                    timerRunning: shouldRunTimer,
+                    timerEndTime: shouldRunTimer ? (Date.now() + rem * 1000) : null,
+                    timerRemaining: rem
+                });
+                showToast("Permainan disambung semula!");
             }
+        };
 
-            // Susun butiran jawapan sebenar untuk dipaparkan selepas keputusan diumumkan
-            const actualAnswerText = (mode === 'tahap1')
-                ? `Jawapan Sebenar: ${item.answer ? 'BETUL' : 'TIDAK'}${item.note ? ' — ' + item.note : ''}`
-                : `Jawapan Sebenar: ${item.answer}`;
-
-            syncStateToCloud({
-                status: 'graded',
-                timerRunning: false,
-                timerEndTime: null,
-                feedbackType: isCorrect ? 'correct' : 'wrong',
-                feedbackTitle: isCorrect ? '✔ BETUL!' : '✖ SALAH!',
-                feedbackDetail: actualAnswerText
+        window.hostStartTimer = async function() {
+            if (userRole !== 'host') return;
+            const rem = getRemainingSeconds() > 0 ? getRemainingSeconds() : 30;
+            await syncStateToCloud({
+                timerRunning: true,
+                timerEndTime: Date.now() + rem * 1000,
+                timerRemaining: rem
             });
         };
 
-        window.hostNextQuestion = function() {
-            const nextIdx = findNextUncompletedIndex(currentState.mode, currentState.questionIndex);
-            if (nextIdx !== -1) {
-                timeUpAlerted = false;
-                syncStateToCloud({
+        window.hostPauseTimer = async function() {
+            if (userRole !== 'host') return;
+            const rem = getRemainingSeconds();
+            await syncStateToCloud({
+                timerRunning: false,
+                timerEndTime: null,
+                timerRemaining: rem
+            });
+        };
+
+        window.hostResetTimer = async function() {
+            if (userRole !== 'host') return;
+            await syncStateToCloud({
+                timerRunning: false,
+                timerEndTime: null,
+                timerRemaining: 30
+            });
+        };
+
+        window.hostJudgeAnswer = async function(isCorrect) {
+            if (userRole !== 'host') return;
+            const mode = currentState.mode;
+            const list = JSON.parse(JSON.stringify(liveQuizBank[mode] || []));
+            const idx = currentState.questionIndex;
+            const item = list[idx];
+
+            if (!item) return;
+
+            // Tandakan soalan ini sebagai 'completed' di Cloud supaya tidak berulang
+            list[idx].completed = true;
+            try {
+                await setDoc(bankDocRef, {
+                    ...liveQuizBank,
+                    [mode]: list
+                });
+            } catch (err) {
+                console.error("Gagal menandakan soalan selesai:", err);
+            }
+
+            const rem = getRemainingSeconds();
+            const answerText = (mode === 'tahap1')
+                ? (item.answer ? "BETUL" : "TIDAK")
+                : item.answer;
+            const extraNote = (mode === 'tahap1' && item.note) ? ` — ${item.note}` : '';
+
+            await syncStateToCloud({
+                status: 'graded',
+                feedbackType: isCorrect ? 'correct' : 'wrong',
+                feedbackTitle: isCorrect ? '🎉 BETUL!' : '❌ SALAH!',
+                feedbackDetail: `Jawapan sebenar: ${answerText}${extraNote}`,
+                timerRunning: false,
+                timerEndTime: null,
+                timerRemaining: rem
+            });
+        };
+
+        window.hostNextQuestion = async function() {
+            if (userRole !== 'host') return;
+            const mode = currentState.mode;
+            const list = liveQuizBank[mode] || [];
+            const nextIdx = list.findIndex(q => !q.completed);
+
+            if (nextIdx === -1) {
+                await syncStateToCloud({
+                    screen: 'result',
+                    status: 'finished',
+                    gamePaused: false,
+                    timerRunning: false,
+                    timerEndTime: null,
+                    timerRemaining: 30
+                });
+            } else {
+                await syncStateToCloud({
+                    screen: 'quiz',
                     questionIndex: nextIdx,
                     status: 'asking',
                     gamePaused: false,
@@ -919,20 +915,21 @@
                     timerEndTime: Date.now() + 30000,
                     timerRemaining: 30
                 });
-            } else {
-                syncStateToCloud({
-                    screen: 'result',
-                    status: 'finished',
-                    gamePaused: false,
-                    timerRunning: false,
-                    timerEndTime: null
-                });
             }
         };
 
-        window.hostResetToMenu = function() {
-            syncStateToCloud({
-                ...defaultRoomState
+        window.hostResetToMenu = async function() {
+            if (userRole !== 'host') return;
+            await syncStateToCloud({
+                screen: 'menu',
+                status: 'asking',
+                gamePaused: false,
+                feedbackType: 'none',
+                feedbackTitle: '',
+                feedbackDetail: '',
+                timerRunning: false,
+                timerEndTime: null,
+                timerRemaining: 30
             });
         };
 
@@ -943,8 +940,35 @@
         };
 
         // ==========================================
-        // LOGIK MUZIK LATAR GLOBAL (DIKAWAL PENUH OLEH HOS)
+        // LOGIK MUZIK LATAR (AUTO MAIN SEMASA KUIZ & KAWALAN IKON)
         // ==========================================
+        window.handleToggleBgm = async function() {
+            if (userRole === 'host') {
+                // Hos mengawal status muzik latar secara global di Cloud
+                const nextPlaying = !liveQuizBank.bgmPlaying;
+                if (nextPlaying && !liveQuizBank.bgmUrl) {
+                    showToast("Sila masukkan URL lagu latar dalam Tetapan terlebih dahulu.");
+                    return;
+                }
+                try {
+                    const updatedBank = {
+                        ...liveQuizBank,
+                        bgmPlaying: nextPlaying
+                    };
+                    await setDoc(bankDocRef, updatedBank);
+                    showToast(nextPlaying ? "Lagu latar dihidupkan secara global." : "Lagu latar dimatikan secara global.");
+                } catch (err) {
+                    console.error(err);
+                    showToast("Gagal mengemas kini status muzik ke Cloud.");
+                }
+            } else {
+                // Penjawab Soalan boleh menyenyapkan atau menghidupkan bunyi pada peranti sendiri
+                isViewerMuted = !isViewerMuted;
+                syncBgmAudioPlayer();
+                showToast(isViewerMuted ? "Bunyi lagu latar disenyapkan pada peranti ini." : "Bunyi lagu latar dihidupkan pada peranti ini.");
+            }
+        };
+
         window.previewBgmLocal = function() {
             const url = document.getElementById('input-bgm-url').value.trim();
             if (!url) {
@@ -984,10 +1008,42 @@
             }
         };
 
+        function updateBgmButtonUI(shouldPlay) {
+            const btn = document.getElementById('btn-toggle-bgm');
+            if (!btn) return;
+            if (userRole === 'host') {
+                if (liveQuizBank.bgmPlaying) {
+                    btn.textContent = "🔊";
+                    btn.title = "Hentikan Lagu Latar (Global)";
+                    btn.className = "p-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold shadow transition";
+                } else {
+                    btn.textContent = "🔇";
+                    btn.title = "Mainkan Lagu Latar (Global)";
+                    btn.className = "p-2.5 rounded-2xl bg-blue-800/80 hover:bg-blue-700 text-blue-200 font-bold shadow transition";
+                }
+            } else {
+                if (!isViewerMuted && shouldPlay) {
+                    btn.textContent = "🔊";
+                    btn.title = "Matikan Bunyi Lagu Latar (Peranti Ini)";
+                    btn.className = "p-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold shadow transition";
+                } else {
+                    btn.textContent = "🔇";
+                    btn.title = isViewerMuted ? "Hidupkan Bunyi Lagu Latar (Peranti Ini)" : "Lagu Latar Tidak Aktif";
+                    btn.className = "p-2.5 rounded-2xl bg-blue-800/80 hover:bg-blue-700 text-blue-200 font-bold shadow transition";
+                }
+            }
+        }
+
         function syncBgmAudioPlayer() {
             const player = document.getElementById('bgm-player');
+            const isQuizRunning = (currentState.screen === 'quiz' && !currentState.gamePaused);
+            // Lagu latar auto main semasa kuiz berlangsung atau apabila diaktifkan Hos, kecuali jika Penjawab memilih senyap lokal
+            const globalShouldPlay = Boolean(liveQuizBank.bgmUrl && (liveQuizBank.bgmPlaying || isQuizRunning));
+            const deviceShouldPlay = (userRole === 'host') ? globalShouldPlay : (globalShouldPlay && !isViewerMuted);
 
-            if (liveQuizBank.bgmPlaying && liveQuizBank.bgmUrl) {
+            updateBgmButtonUI(globalShouldPlay);
+
+            if (deviceShouldPlay) {
                 if (player.src !== liveQuizBank.bgmUrl) {
                     player.src = liveQuizBank.bgmUrl;
                 }
@@ -1000,7 +1056,6 @@
             } else {
                 if (!player.paused) {
                     player.pause();
-                    player.currentTime = 0;
                 }
             }
         }
@@ -1008,7 +1063,11 @@
         // Buka kunci audio pelayar secara automatik jika pengguna menyentuh mana-mana bahagian skrin semasa lagu latar aktif
         document.addEventListener('pointerdown', () => {
             const player = document.getElementById('bgm-player');
-            if (liveQuizBank.bgmPlaying && liveQuizBank.bgmUrl && player.paused) {
+            const isQuizRunning = (currentState.screen === 'quiz' && !currentState.gamePaused);
+            const globalShouldPlay = Boolean(liveQuizBank.bgmUrl && (liveQuizBank.bgmPlaying || isQuizRunning));
+            const deviceShouldPlay = (userRole === 'host') ? globalShouldPlay : (globalShouldPlay && !isViewerMuted);
+
+            if (deviceShouldPlay && player.paused) {
                 player.play().catch(() => {});
             }
         });
@@ -1463,6 +1522,7 @@
                         const incoming = docSnap.data();
                         const isNewUpdate = incoming.lastUpdated && incoming.lastUpdated > lastSoundTimestamp;
                         currentState = { ...defaultRoomState, ...incoming };
+                        syncBgmAudioPlayer();
                         renderUI();
 
                         if (isNewUpdate) {
