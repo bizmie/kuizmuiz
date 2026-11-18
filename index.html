@@ -32,6 +32,14 @@
         #timer-bar-fill {
             transition: width 0.25s linear, background-color 0.3s ease;
         }
+        /* Animasi ikon pilihan Betul/Salah pada skrin penjawab */
+        @keyframes choicePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+        .animate-choice {
+            animation: choicePulse 2s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center p-2.5 sm:p-6 text-slate-800">
@@ -227,17 +235,31 @@
                         </p>
                     </div>
 
-                    <!-- PAPARAN PILIHAN BETUL / SALAH PADA SKRIN PENJAWAB SOALAN (KHUSUS MOD TAHAP 1) -->
-                    <div id="viewer-t1-options" class="hidden grid grid-cols-2 gap-3 sm:gap-4 mb-5">
-                        <div class="py-4 px-4 rounded-2xl bg-emerald-50 border-2 border-emerald-400 text-emerald-800 text-center font-black text-lg sm:text-2xl shadow-sm select-none">
-                            ✔ BETUL
+                    <!-- PAPARAN KAWALAN TAHAP 1 PADA SKRIN PENJAWAB SOALAN -->
+                    <div id="viewer-t1-container" class="hidden mb-5">
+                        <div id="viewer-t1-active-view">
+                            <div class="text-center mb-3">
+                                <p class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-blue-800 animate-pulse">
+                                    🙋 Sila sebutkan:
+                                </p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                                <div class="py-4 px-4 rounded-2xl bg-emerald-50 border-2 border-emerald-400 text-emerald-800 text-center font-black text-lg sm:text-2xl shadow-sm select-none flex flex-col items-center justify-center gap-1.5 animate-choice">
+                                    <span class="text-2xl">/</span>
+                                    <span>BETUL</span>
+                                </div>
+                                <div class="py-4 px-4 rounded-2xl bg-rose-50 border-2 border-rose-400 text-rose-800 text-center font-black text-lg sm:text-2xl shadow-sm select-none flex flex-col items-center justify-center gap-1.5 animate-choice">
+                                    <span class="text-2xl">X</span>
+                                    <span>SALAH</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="py-4 px-4 rounded-2xl bg-rose-50 border-2 border-rose-400 text-rose-800 text-center font-black text-lg sm:text-2xl shadow-sm select-none">
-                            ✖ SALAH
+                        <div id="viewer-t1-timeout-view" class="hidden py-4 px-5 rounded-2xl bg-rose-100 border-2 border-rose-400 text-rose-900 text-center font-extrabold text-base sm:text-lg shadow-sm">
+                            Gagal menjawab pada masa ditetapkan.
                         </div>
                     </div>
 
-                    <!-- KAWALAN KHUSUS HOS PROGRAM / ADMIN (JAWAPAN RUJUKAN TERUS & SAHKAN BETUL/SALAH) -->
+                    <!-- KAWALAN KHUSUS HOS PROGRAM / ADMIN (JAWAPAN RUJUKAN TERUS & SAHKAN BETUL/SALAH BERASINGAN) -->
                     <div id="host-controls-area" class="mb-5 space-y-4">
                         <!-- Kotak Jawapan Rujukan Terus (Hanya kelihatan pada skrin Hos) -->
                         <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4">
@@ -250,7 +272,7 @@
                             <p id="host-reference-note" class="text-xs sm:text-sm text-slate-600 mt-1"></p>
                         </div>
 
-                        <!-- Butang Pengesahan Lisan (Betul / Salah) -->
+                        <!-- Butang Pengesahan Lisan (Betul / Salah Berasingan) -->
                         <div class="grid grid-cols-2 gap-3 sm:gap-4">
                             <button id="btn-judge-correct" onclick="hostJudgeAnswer(true)" class="py-4 px-5 rounded-2xl font-extrabold text-base sm:text-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition disabled:opacity-50">
                                 ✔ BETUL
@@ -266,7 +288,7 @@
                         🙋 Sila sebutkan jawapan anda secara lisan sebelum masa tamat, dan tunggu pengesahan keputusan di skrin!
                     </div>
 
-                    <!-- KOTAK PEMAKLUMAN KEPUTUSAN (BETUL / SALAH SERENTAK DI SEMUA SKRIN) -->
+                    <!-- KOTAK PEMAKLUMAN KEPUTUSAN (BETUL / SALAH / MASA TAMAT SERENTAK DI SEMUA SKRIN) -->
                     <div id="feedback-panel" class="hidden rounded-2xl p-5 sm:p-6 mb-5 border-4 text-center transition-all">
                         <h4 id="fb-title" class="text-2xl sm:text-4xl font-black tracking-wide mb-2"></h4>
                         <p id="fb-detail" class="text-sm sm:text-base font-semibold opacity-95"></p>
@@ -355,7 +377,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h3 class="text-lg sm:text-xl font-extrabold">⚙️ Tetapan Hos Program / Admin</h3>
-                        <span class="bg-blue-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">v1.5</span>
+                        <span class="bg-blue-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">v1.7</span>
                     </div>
                     <p class="text-xs text-slate-400">Urus tajuk program, keselamatan, muzik latar & status soalan di Cloud Firebase</p>
                 </div>
@@ -389,7 +411,7 @@
                                 <p class="text-xs text-slate-500">Status binaan aplikasi masa nyata</p>
                             </div>
                             <span class="px-3 py-1 rounded-xl bg-blue-100 text-blue-800 font-black text-xs sm:text-sm">
-                                Versi Aplikasi: v1.5
+                                Versi Aplikasi: v1.7
                             </span>
                         </div>
 
@@ -532,9 +554,6 @@
         const roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kuiz_live', ROOM_ID);
         const bankDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kuiz_bank', ROOM_ID);
 
-        // Versi Semasa Aplikasi
-        const APP_VERSION = "v1.5";
-
         // Bank Soalan Lalai (Dilengkapi medan 'completed: false' untuk elak ulangan)
         const defaultQuizBank = {
             tahap1: [
@@ -589,10 +608,15 @@
         let draftQuizBank = JSON.parse(JSON.stringify(defaultQuizBank));
         let editorActiveMode = 'tahap1';
 
+        // Penanda masa relatif tempatan supaya animasi bar pemasa lancar di semua peranti tanpa masalah selisih jam
+        let localTimerAnchorPerf = performance.now();
+        let localTimerStartRem = 30;
+        let lastTimerSyncKey = '';
+
         // Pandangan lalai ialah "Penjawab Soalan" (viewer) untuk semua pelayar pada awal bukaan
         let userRole = 'viewer';
         let isHostAuthenticated = false;
-        let isViewerMuted = false; // Kawalan senyap lokal khusus pada skrin Penjawab Soalan
+        let isViewerMuted = false;
         let lastSoundTimestamp = 0;
         let timerInterval = null;
         let timeUpAlerted = false;
@@ -650,6 +674,22 @@
             toast.textContent = msg;
             toast.classList.remove('opacity-0');
             setTimeout(() => toast.classList.add('opacity-0'), 3200);
+        }
+
+        // Kemas kini penanda pemasa tempatan apabila state dari Firestore berubah
+        function calibrateLocalTimerAnchor(state) {
+            const syncKey = `${state.timerRunning}_${state.timerEndTime}_${state.timerRemaining}_${state.gamePaused}_${state.questionIndex}_${state.mode}`;
+            if (syncKey !== lastTimerSyncKey) {
+                lastTimerSyncKey = syncKey;
+                localTimerAnchorPerf = performance.now();
+                if (state.timerRunning && state.timerEndTime && !state.gamePaused) {
+                    const rawDiff = (state.timerEndTime - Date.now()) / 1000;
+                    const maxCap = Number(state.timerRemaining ?? 30);
+                    localTimerStartRem = (rawDiff > 0 && rawDiff <= maxCap + 2) ? rawDiff : maxCap;
+                } else {
+                    localTimerStartRem = Math.max(0, Number(state.timerRemaining ?? 30));
+                }
+            }
         }
 
         // Kemas kini Keadaan Sesi ke Cloud Firestore
@@ -747,9 +787,9 @@
         }
 
         function getRemainingSeconds() {
-            if (currentState.timerRunning && currentState.timerEndTime && !currentState.gamePaused) {
-                const diff = (currentState.timerEndTime - Date.now()) / 1000;
-                return Math.max(0, diff);
+            if (currentState.timerRunning && !currentState.gamePaused) {
+                const elapsed = (performance.now() - localTimerAnchorPerf) / 1000;
+                return Math.max(0, localTimerStartRem - elapsed);
             }
             return Math.max(0, Number(currentState.timerRemaining ?? 30));
         }
@@ -785,13 +825,26 @@
                 if (userRole === 'host' && currentState.status === 'asking') {
                     hostHandleTimeUp();
                 } else if (userRole !== 'host' && currentState.status === 'asking') {
-                    // Paparan segera MASA TAMAT pada skrin penjawab sementara menunggu penyelarasan Hos
+                    const mode = currentState.mode;
+                    const list = liveQuizBank[mode] || [];
+                    const item = list[currentState.questionIndex];
+                    const answerText = item
+                        ? (mode === 'tahap1' ? (item.answer ? "BETUL" : "TIDAK") : item.answer)
+                        : "";
+                    const extraNote = (item && mode === 'tahap1' && item.note) ? ` — ${item.note}` : '';
+
+                    if (mode === 'tahap1') {
+                        document.getElementById('viewer-t1-active-view').classList.add('hidden');
+                        document.getElementById('viewer-t1-timeout-view').classList.remove('hidden');
+                        document.getElementById('viewer-t1-timeout-view').textContent = "Gagal menjawab pada masa ditetapkan.";
+                    }
+
                     const fbPanel = document.getElementById('feedback-panel');
                     if (fbPanel) {
                         fbPanel.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-500', 'text-emerald-900', 'bg-rose-50', 'border-rose-500', 'text-rose-900');
                         fbPanel.classList.add('bg-rose-50', 'border-rose-500', 'text-rose-900');
                         document.getElementById('fb-title').textContent = '⏰ MASA TAMAT!';
-                        document.getElementById('fb-detail').textContent = 'Masa menjawab telah tamat. Soalan ini dianggap gagal.';
+                        document.getElementById('fb-detail').textContent = `Gagal menjawab pada masa ditetapkan.${answerText ? ` Jawapan sebenar: ${answerText}${extraNote}` : ''}`;
                     }
                     document.getElementById('viewer-quiz-notice').classList.add('hidden');
                 }
@@ -800,7 +853,7 @@
             }
         }
 
-        // Pengendalian automatik apabila masa 30 saat tamat (Soalan dianggap gagal)
+        // Pengendalian automatik apabila masa 30 saat tamat
         async function hostHandleTimeUp() {
             if (userRole !== 'host' || currentState.status !== 'asking') return;
             const mode = currentState.mode;
@@ -828,8 +881,8 @@
             await syncStateToCloud({
                 status: 'graded',
                 feedbackType: 'wrong',
-                feedbackTitle: '⏰ MASA TAMAT! (GAGAL)',
-                feedbackDetail: `Masa telah tamat — soalan dianggap gagal. Jawapan sebenar: ${answerText}${extraNote}`,
+                feedbackTitle: '⏰ MASA TAMAT!',
+                feedbackDetail: `Gagal menjawab pada masa ditetapkan. Jawapan sebenar: ${answerText}${extraNote}`,
                 timerRunning: false,
                 timerEndTime: null,
                 timerRemaining: 0
@@ -890,7 +943,6 @@
             const willPause = !currentState.gamePaused;
             if (willPause) {
                 const rem = getRemainingSeconds();
-                // Hentikan muzik latar apabila permainan dihentikan sementara
                 if (liveQuizBank.bgmPlaying) {
                     try {
                         await setDoc(bankDocRef, {
@@ -909,7 +961,6 @@
             } else {
                 const rem = Math.max(1, Number(currentState.timerRemaining || 30));
                 const shouldRunTimer = (currentState.status === 'asking');
-                // Sambung semula muzik latar apabila permainan disambung
                 if (liveQuizBank.bgmUrl && !liveQuizBank.bgmPlaying) {
                     try {
                         await setDoc(bankDocRef, {
@@ -966,7 +1017,6 @@
 
             if (!item) return;
 
-            // Tandakan soalan ini sebagai 'completed' di Cloud supaya tidak berulang
             list[idx].completed = true;
             try {
                 await setDoc(bankDocRef, {
@@ -1027,7 +1077,6 @@
 
         window.hostResetToMenu = async function() {
             if (userRole !== 'host') return;
-            // Hentikan lagu latar secara automatik apabila keluar dari kategori kuiz
             if (liveQuizBank.bgmPlaying) {
                 try {
                     await setDoc(bankDocRef, {
@@ -1057,11 +1106,10 @@
         };
 
         // ==========================================
-        // LOGIK MUZIK LATAR (AUTO MAIN SEMASA KUIZ & KAWALAN IKON)
+        // LOGIK MUZIK LATAR
         // ==========================================
         window.handleToggleBgm = async function() {
             if (userRole === 'host') {
-                // Hos mengawal status muzik latar secara global di Cloud
                 const nextPlaying = !liveQuizBank.bgmPlaying;
                 if (nextPlaying && !liveQuizBank.bgmUrl) {
                     showToast("Sila masukkan URL lagu latar dalam Tetapan terlebih dahulu.");
@@ -1079,7 +1127,6 @@
                     showToast("Gagal mengemas kini status muzik ke Cloud.");
                 }
             } else {
-                // Penjawab Soalan boleh menyenyapkan atau menghidupkan bunyi pada peranti sendiri
                 isViewerMuted = !isViewerMuted;
                 syncBgmAudioPlayer();
                 showToast(isViewerMuted ? "Bunyi lagu latar disenyapkan pada peranti ini." : "Bunyi lagu latar dihidupkan pada peranti ini.");
@@ -1154,7 +1201,6 @@
         function syncBgmAudioPlayer() {
             const player = document.getElementById('bgm-player');
             const isQuizRunning = (currentState.screen === 'quiz' && !currentState.gamePaused);
-            // Lagu latar hanya dimainkan semasa kuiz aktif berjalan (tidak dihentikan & tidak di menu utama)
             const globalShouldPlay = Boolean(liveQuizBank.bgmUrl && liveQuizBank.bgmPlaying && isQuizRunning);
             const deviceShouldPlay = (userRole === 'host') ? globalShouldPlay : (globalShouldPlay && !isViewerMuted);
 
@@ -1166,9 +1212,7 @@
                 }
                 player.volume = 0.4;
                 if (player.paused) {
-                    player.play().catch(() => {
-                        // Jika pelayar menyekat autoplay awal, akan auto-mula apabila pengguna sentuh skrin
-                    });
+                    player.play().catch(() => {});
                 }
             } else {
                 if (!player.paused) {
@@ -1177,7 +1221,6 @@
             }
         }
 
-        // Buka kunci audio pelayar secara automatik jika pengguna menyentuh mana-mana bahagian skrin semasa lagu latar aktif
         document.addEventListener('pointerdown', () => {
             const player = document.getElementById('bgm-player');
             const isQuizRunning = (currentState.screen === 'quiz' && !currentState.gamePaused);
@@ -1190,7 +1233,7 @@
         });
 
         // ==========================================
-        // LOGIK MODAL TETAPAN & EDITOR SOALAN FIREBASE
+        // LOGIK MODAL TETAPAN & EDITOR SOALAN
         // ==========================================
         window.openSettingsModal = function() {
             if (userRole !== 'host' || !isHostAuthenticated) return;
@@ -1222,7 +1265,6 @@
                     content.classList.add('hidden');
                 }
             });
-            // Butang simpan soalan di pengaki hanya aktif apabila di tab editor
             const saveQBtn = document.getElementById('btn-save-questions');
             if (tab === 'editor') saveQBtn.classList.remove('hidden');
             else saveQBtn.classList.add('hidden');
@@ -1306,14 +1348,12 @@
                 completed: false
             }));
             renderEditorList();
-            showToast("Semua tanda 'Selesai' dinyahaktifkan. Klik 'Simpan Semua Soalan ke Firebase' untuk sahkan.");
+            showToast("Semua tanda 'Selesai' dinyahaktifkan.");
         };
 
         window.updateDraftField = function(index, field, value) {
             if (field === 'answer' && editorActiveMode === 'tahap1') {
                 draftQuizBank.tahap1[index].answer = (value === 'true');
-            } else if (field === 'keywords') {
-                draftQuizBank.tahap2[index].keywords = value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
             } else {
                 draftQuizBank[editorActiveMode][index][field] = value;
             }
@@ -1337,7 +1377,7 @@
                             </span>
                             <label class="inline-flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-lg text-xs font-bold border ${isDone ? 'bg-emerald-600 text-white border-emerald-700' : 'bg-white text-slate-600 border-slate-300'}">
                                 <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleDraftCompleted(${idx}, this.checked)" class="rounded accent-emerald-600">
-                                <span>${isDone ? '✔ Selesai (Tidak Diulang)' : 'Belum Selesai'}</span>
+                                <span>${isDone ? '✔ Selesai' : 'Belum Selesai'}</span>
                             </label>
                         </div>
                         <button onclick="removeEditorQuestion(${idx})" class="text-xs font-bold text-rose-600 hover:bg-rose-100 px-2.5 py-1 rounded-lg">🗑️ Buang</button>
@@ -1397,7 +1437,7 @@
             draftQuizBank.tahap1 = JSON.parse(JSON.stringify(defaultQuizBank.tahap1));
             draftQuizBank.tahap2 = JSON.parse(JSON.stringify(defaultQuizBank.tahap2));
             renderEditorList();
-            showToast("Soalan asal dipulihkan ke editor. Klik 'Simpan Semua Soalan' untuk sahkan.");
+            showToast("Soalan asal dipulihkan ke editor.");
         };
 
         function escapeHtml(str) {
@@ -1414,12 +1454,10 @@
         function renderUI() {
             const isHost = (userRole === 'host');
 
-            // Kemas kini tajuk program & dokumen dari Firebase
             const progTitle = liveQuizBank.programTitle || 'Pop Kuiz';
             document.getElementById('main-program-title').textContent = `🏆 ${progTitle}`;
             document.title = `${progTitle} (Masa Nyata)`;
 
-            // Kemas kini bilangan baki soalan yang belum selesai pada kad menu
             const t1List = liveQuizBank.tahap1 || [];
             const t2List = liveQuizBank.tahap2 || [];
             const t1Rem = t1List.filter(q => !q.completed).length;
@@ -1431,7 +1469,6 @@
             document.getElementById('view-quiz').classList.add('hidden');
             document.getElementById('view-result').classList.add('hidden');
 
-            // Kawal garis nipis animasi pulse di bawah header (aktif hanya apabila permainan sedang berlangsung dan tidak dijeda)
             const pulseLine = document.getElementById('live-game-pulse-line');
             if (currentState.screen === 'quiz' && !currentState.gamePaused) {
                 pulseLine.classList.remove('hidden');
@@ -1448,7 +1485,6 @@
                 const t1DoneCount = t1List.filter(q => q.completed).length;
                 const t2DoneCount = t2List.filter(q => q.completed).length;
 
-                // Tetapkan label MULA / SAMBUNG / SELESAI mengikut aktiviti Hos yang lalu
                 if (t1List.length > 0 && t1Rem === 0) {
                     btnT1.innerHTML = "✔ SELESAI (0 Baki)";
                     btnT1.className = "w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
@@ -1488,7 +1524,6 @@
             if (currentState.screen === 'quiz') {
                 document.getElementById('view-quiz').classList.remove('hidden');
 
-                // Kawal butang Henti / Sambung Permainan & Keluar Kategori Kuiz untuk Hos Program
                 const pauseWrapper = document.getElementById('host-game-pause-wrapper');
                 const pauseBtn = document.getElementById('btn-toggle-game-pause');
                 const pausedBanner = document.getElementById('game-paused-banner');
@@ -1508,7 +1543,6 @@
                     pauseWrapper.classList.add('hidden');
                 }
 
-                // Jika permainan sedang dihentikan sementara (gamePaused)
                 if (currentState.gamePaused) {
                     pausedBanner.classList.remove('hidden');
                     activeQuizBody.classList.add('hidden');
@@ -1517,7 +1551,7 @@
                         document.getElementById('game-paused-subtext').textContent = "Anda telah menghentikan sementara permainan ini. Klik butang di bawah untuk menyambung semula.";
                     } else {
                         hostResumeAction.classList.add('hidden');
-                        document.getElementById('game-paused-subtext').textContent = "Sesi kuiz telah dihentikan sementara oleh Hos Program. Sila tunggu sehingga permainan disambung semula.";
+                        document.getElementById('game-paused-subtext').textContent = "Sesi kuiz telah dihentikan sementara oleh Hos Program.";
                     }
                 } else {
                     pausedBanner.classList.add('hidden');
@@ -1547,21 +1581,22 @@
                 const hostTimerControls = document.getElementById('host-timer-controls');
                 const hostControlsArea = document.getElementById('host-controls-area');
                 const viewerQuizNotice = document.getElementById('viewer-quiz-notice');
-                const viewerT1Options = document.getElementById('viewer-t1-options');
+                const viewerT1Container = document.getElementById('viewer-t1-container');
+                const viewerT1ActiveView = document.getElementById('viewer-t1-active-view');
+                const viewerT1TimeoutView = document.getElementById('viewer-t1-timeout-view');
                 const hostFooterNav = document.getElementById('host-footer-nav');
 
                 if (isHost) {
                     hostTimerControls.classList.remove('hidden');
                     hostControlsArea.classList.remove('hidden');
                     viewerQuizNotice.classList.add('hidden');
-                    viewerT1Options.classList.add('hidden');
+                    viewerT1Container.classList.add('hidden');
                     hostFooterNav.classList.remove('hidden');
 
-                    // Paparkan jawapan rujukan terus pada skrin Hos
                     const refAnsEl = document.getElementById('host-reference-answer');
                     const refNoteEl = document.getElementById('host-reference-note');
                     if (currentState.mode === 'tahap1') {
-                        refAnsEl.textContent = item.answer ? "✔ BETUL" : "✖ TIDAK";
+                        refAnsEl.textContent = item.answer ? "✔ BETUL" : "✖ SALAH";
                         refNoteEl.textContent = item.note || "";
                     } else {
                         refAnsEl.textContent = item.answer;
@@ -1584,14 +1619,20 @@
                     hostControlsArea.classList.add('hidden');
                     hostFooterNav.classList.add('hidden');
 
-                    // Paparkan pilihan BETUL / SALAH pada skrin Penjawab Soalan jika kategori ialah Mod Tahap 1
                     if (currentState.mode === 'tahap1') {
-                        viewerT1Options.classList.remove('hidden');
+                        viewerT1Container.classList.remove('hidden');
+                        if (currentState.feedbackType === 'wrong' && (currentState.feedbackTitle || '').includes('MASA TAMAT')) {
+                            viewerT1ActiveView.classList.add('hidden');
+                            viewerT1TimeoutView.classList.remove('hidden');
+                            viewerT1TimeoutView.textContent = "Gagal menjawab pada masa ditetapkan.";
+                        } else {
+                            viewerT1ActiveView.classList.remove('hidden');
+                            viewerT1TimeoutView.classList.add('hidden');
+                        }
                     } else {
-                        viewerT1Options.classList.add('hidden');
+                        viewerT1Container.classList.add('hidden');
                     }
 
-                    // Pada skrin Penjawab Soalan: sembunyikan notis menunggu jika keputusan Betul/Salah/Masa Tamat sudah keluar
                     if (currentState.status === 'asking') {
                         viewerQuizNotice.classList.remove('hidden');
                     } else {
@@ -1599,17 +1640,20 @@
                     }
                 }
 
-                // Panel Pemakluman Keputusan (BETUL / SALAH serentak pada skrin Hos & Penjawab)
+                // Panel Pemakluman Keputusan
                 const fbPanel = document.getElementById('feedback-panel');
-                if (currentState.feedbackType !== 'none') {
+                if (currentState.status === 'graded') {
                     fbPanel.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-500', 'text-emerald-900', 'bg-rose-50', 'border-rose-500', 'text-rose-900');
-                    
                     if (currentState.feedbackType === 'correct') {
                         fbPanel.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900');
                     } else {
                         fbPanel.classList.add('bg-rose-50', 'border-rose-500', 'text-rose-900');
+                        if ((currentState.feedbackTitle || '').includes('MASA TAMAT')) {
+                            viewerT1ActiveView.classList.add('hidden');
+                            viewerT1TimeoutView.classList.remove('hidden');
+                            viewerT1TimeoutView.textContent = "Gagal menjawab pada masa ditetapkan.";
+                        }
                     }
-
                     document.getElementById('fb-title').textContent = currentState.feedbackTitle;
                     document.getElementById('fb-detail').textContent = currentState.feedbackDetail;
                 } else {
@@ -1618,7 +1662,7 @@
                 return;
             }
 
-            // 3. SKRIN TAMAT (SEMUA SOALAN SELESAI)
+            // 3. SKRIN TAMAT
             if (currentState.screen === 'result') {
                 document.getElementById('view-result').classList.remove('hidden');
 
@@ -1666,32 +1710,34 @@
                     currentState = { ...defaultRoomState };
                 }
 
-                // Pandangan pertama / lalai ialah Penjawab Soalan (viewer)
+                calibrateLocalTimerAnchor(currentState);
+
                 applyRoleUI('viewer');
                 lastSoundTimestamp = currentState.lastUpdated || Date.now();
                 syncBgmAudioPlayer();
 
-                // Pendengar Masa Nyata untuk Sesi Kuiz
                 onSnapshot(roomDocRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const incoming = docSnap.data();
                         const isNewUpdate = incoming.lastUpdated && incoming.lastUpdated > lastSoundTimestamp;
                         currentState = { ...defaultRoomState, ...incoming };
+                        calibrateLocalTimerAnchor(currentState);
                         syncBgmAudioPlayer();
                         renderUI();
 
                         if (isNewUpdate) {
                             lastSoundTimestamp = incoming.lastUpdated;
                             if (incoming.feedbackType === 'correct') playSound('correct');
-                            else if (incoming.feedbackType === 'wrong') playSound('wrong');
-                            else if (incoming.feedbackType === 'info') playSound('reveal');
+                            else if (incoming.feedbackType === 'wrong') {
+                                if ((incoming.feedbackTitle || '').includes('MASA TAMAT')) playSound('timeup');
+                                else playSound('wrong');
+                            } else if (incoming.feedbackType === 'info') playSound('reveal');
                         }
                     }
                 }, (error) => {
                     console.error("Ralat pendengar sesi:", error);
                 });
 
-                // Pendengar Masa Nyata untuk Bank Soalan, Tajuk Program, Kata Laluan & Muzik Latar
                 onSnapshot(bankDocRef, (bankSnap) => {
                     if (bankSnap.exists()) {
                         liveQuizBank = { ...defaultQuizBank, ...bankSnap.data() };
@@ -1702,10 +1748,8 @@
                     console.error("Ralat pendengar bank soalan:", error);
                 });
 
-                // Selang kemas kini visual bar pemasa mendatar 30 saat
-                timerInterval = setInterval(updateTimerDisplay, 200);
+                timerInterval = setInterval(updateTimerDisplay, 100);
 
-                // Sembunyikan Skrin Loading selepas kesemua data Cloud siap dimuat turun
                 loadingOverlay.classList.add('hidden');
                 appContainer.classList.remove('hidden');
 
