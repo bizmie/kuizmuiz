@@ -227,6 +227,16 @@
                         </p>
                     </div>
 
+                    <!-- PAPARAN PILIHAN BETUL / SALAH PADA SKRIN PENJAWAB SOALAN (KHUSUS MOD TAHAP 1) -->
+                    <div id="viewer-t1-options" class="hidden grid grid-cols-2 gap-3 sm:gap-4 mb-5">
+                        <div class="py-4 px-4 rounded-2xl bg-emerald-50 border-2 border-emerald-400 text-emerald-800 text-center font-black text-lg sm:text-2xl shadow-sm select-none">
+                            ✔ BETUL
+                        </div>
+                        <div class="py-4 px-4 rounded-2xl bg-rose-50 border-2 border-rose-400 text-rose-800 text-center font-black text-lg sm:text-2xl shadow-sm select-none">
+                            ✖ SALAH
+                        </div>
+                    </div>
+
                     <!-- KAWALAN KHUSUS HOS PROGRAM / ADMIN (JAWAPAN RUJUKAN TERUS & SAHKAN BETUL/SALAH) -->
                     <div id="host-controls-area" class="mb-5 space-y-4">
                         <!-- Kotak Jawapan Rujukan Terus (Hanya kelihatan pada skrin Hos) -->
@@ -345,7 +355,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h3 class="text-lg sm:text-xl font-extrabold">⚙️ Tetapan Hos Program / Admin</h3>
-                        <span class="bg-blue-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">v1.4</span>
+                        <span class="bg-blue-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">v1.5</span>
                     </div>
                     <p class="text-xs text-slate-400">Urus tajuk program, keselamatan, muzik latar & status soalan di Cloud Firebase</p>
                 </div>
@@ -379,7 +389,7 @@
                                 <p class="text-xs text-slate-500">Status binaan aplikasi masa nyata</p>
                             </div>
                             <span class="px-3 py-1 rounded-xl bg-blue-100 text-blue-800 font-black text-xs sm:text-sm">
-                                Versi Aplikasi: v1.4
+                                Versi Aplikasi: v1.5
                             </span>
                         </div>
 
@@ -523,7 +533,7 @@
         const bankDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kuiz_bank', ROOM_ID);
 
         // Versi Semasa Aplikasi
-        const APP_VERSION = "v1.4";
+        const APP_VERSION = "v1.5";
 
         // Bank Soalan Lalai (Dilengkapi medan 'completed: false' untuk elak ulangan)
         const defaultQuizBank = {
@@ -616,13 +626,14 @@
                     osc.start(now);
                     osc.stop(now + 0.35);
                 } else if (type === 'timeup') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(300, now);
-                    osc.frequency.setValueAtTime(220, now + 0.2);
-                    gain.gain.setValueAtTime(0.15, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+                    // Bunyi buzzer tegas apabila masa tamat
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.setValueAtTime(125, now + 0.25);
+                    gain.gain.setValueAtTime(0.28, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.75);
                     osc.start(now);
-                    osc.stop(now + 0.45);
+                    osc.stop(now + 0.75);
                 } else if (type === 'reveal') {
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(440, now);
@@ -771,9 +782,58 @@
             if (rem <= 0 && currentState.timerRunning && !timeUpAlerted) {
                 timeUpAlerted = true;
                 playSound('timeup');
+                if (userRole === 'host' && currentState.status === 'asking') {
+                    hostHandleTimeUp();
+                } else if (userRole !== 'host' && currentState.status === 'asking') {
+                    // Paparan segera MASA TAMAT pada skrin penjawab sementara menunggu penyelarasan Hos
+                    const fbPanel = document.getElementById('feedback-panel');
+                    if (fbPanel) {
+                        fbPanel.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-500', 'text-emerald-900', 'bg-rose-50', 'border-rose-500', 'text-rose-900');
+                        fbPanel.classList.add('bg-rose-50', 'border-rose-500', 'text-rose-900');
+                        document.getElementById('fb-title').textContent = '⏰ MASA TAMAT!';
+                        document.getElementById('fb-detail').textContent = 'Masa menjawab telah tamat. Soalan ini dianggap gagal.';
+                    }
+                    document.getElementById('viewer-quiz-notice').classList.add('hidden');
+                }
             } else if (rem > 0) {
                 timeUpAlerted = false;
             }
+        }
+
+        // Pengendalian automatik apabila masa 30 saat tamat (Soalan dianggap gagal)
+        async function hostHandleTimeUp() {
+            if (userRole !== 'host' || currentState.status !== 'asking') return;
+            const mode = currentState.mode;
+            const list = JSON.parse(JSON.stringify(liveQuizBank[mode] || []));
+            const idx = currentState.questionIndex;
+            const item = list[idx];
+
+            if (item) {
+                list[idx].completed = true;
+                try {
+                    await setDoc(bankDocRef, {
+                        ...liveQuizBank,
+                        [mode]: list
+                    });
+                } catch (err) {
+                    console.error("Gagal menandakan soalan selesai selepas masa tamat:", err);
+                }
+            }
+
+            const answerText = item
+                ? (mode === 'tahap1' ? (item.answer ? "BETUL" : "TIDAK") : item.answer)
+                : "";
+            const extraNote = (item && mode === 'tahap1' && item.note) ? ` — ${item.note}` : '';
+
+            await syncStateToCloud({
+                status: 'graded',
+                feedbackType: 'wrong',
+                feedbackTitle: '⏰ MASA TAMAT! (GAGAL)',
+                feedbackDetail: `Masa telah tamat — soalan dianggap gagal. Jawapan sebenar: ${answerText}${extraNote}`,
+                timerRunning: false,
+                timerEndTime: null,
+                timerRemaining: 0
+            });
         }
 
         // ==========================================
@@ -1487,12 +1547,14 @@
                 const hostTimerControls = document.getElementById('host-timer-controls');
                 const hostControlsArea = document.getElementById('host-controls-area');
                 const viewerQuizNotice = document.getElementById('viewer-quiz-notice');
+                const viewerT1Options = document.getElementById('viewer-t1-options');
                 const hostFooterNav = document.getElementById('host-footer-nav');
 
                 if (isHost) {
                     hostTimerControls.classList.remove('hidden');
                     hostControlsArea.classList.remove('hidden');
                     viewerQuizNotice.classList.add('hidden');
+                    viewerT1Options.classList.add('hidden');
                     hostFooterNav.classList.remove('hidden');
 
                     // Paparkan jawapan rujukan terus pada skrin Hos
@@ -1522,7 +1584,14 @@
                     hostControlsArea.classList.add('hidden');
                     hostFooterNav.classList.add('hidden');
 
-                    // Pada skrin Penjawab Soalan: sembunyikan notis menunggu jika keputusan Betul/Salah sudah keluar
+                    // Paparkan pilihan BETUL / SALAH pada skrin Penjawab Soalan jika kategori ialah Mod Tahap 1
+                    if (currentState.mode === 'tahap1') {
+                        viewerT1Options.classList.remove('hidden');
+                    } else {
+                        viewerT1Options.classList.add('hidden');
+                    }
+
+                    // Pada skrin Penjawab Soalan: sembunyikan notis menunggu jika keputusan Betul/Salah/Masa Tamat sudah keluar
                     if (currentState.status === 'asking') {
                         viewerQuizNotice.classList.remove('hidden');
                     } else {
