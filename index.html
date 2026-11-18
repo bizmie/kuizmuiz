@@ -105,34 +105,48 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <!-- Kad Mod Tahap 1 -->
-                    <button id="btn-start-t1" onclick="hostStartQuiz('tahap1')" class="group text-left bg-slate-50 hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-500 rounded-2xl p-5 sm:p-6 transition-all shadow-sm hover:shadow-md disabled:opacity-65 disabled:cursor-not-allowed">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="inline-block bg-blue-100 text-blue-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase">
-                                Umur 7 – 9 Tahun
-                            </span>
-                            <span id="count-t1-badge" class="text-xs font-bold text-slate-600 bg-slate-200/70 px-2.5 py-0.5 rounded-full">10 Baki</span>
+                    <div id="card-start-t1" class="flex flex-col justify-between bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 sm:p-6 transition-all shadow-sm">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="inline-block bg-blue-100 text-blue-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase">
+                                    Umur 7 – 9 Tahun
+                                </span>
+                                <span id="count-t1-badge" class="text-xs font-bold text-slate-600 bg-slate-200/70 px-2.5 py-0.5 rounded-full">10 Baki</span>
+                            </div>
+                            <h3 class="text-xl font-extrabold text-slate-800 mb-2">Mod Tahap 1</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                                <strong>Format Betul / Tidak (Lisan)</strong><br>
+                                Peserta meneka secara lisan. Hos sahkan Betul atau Salah tanpa ulangan soalan selesai.
+                            </p>
                         </div>
-                        <h3 class="text-xl font-extrabold text-slate-800 group-hover:text-blue-700 mb-2">Mod Tahap 1</h3>
-                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                            <strong>Format Betul / Tidak (Lisan)</strong><br>
-                            Peserta meneka secara lisan. Hos sahkan Betul atau Salah tanpa ulangan soalan selesai.
-                        </p>
-                    </button>
+                        <div class="mt-5 pt-4 border-t border-slate-200/80">
+                            <button id="btn-start-t1" onclick="hostStartQuiz('tahap1')" class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                ▶ MULA
+                            </button>
+                        </div>
+                    </div>
 
                     <!-- Kad Mod Tahap 2 -->
-                    <button id="btn-start-t2" onclick="hostStartQuiz('tahap2')" class="group text-left bg-slate-50 hover:bg-amber-50 border-2 border-slate-200 hover:border-amber-500 rounded-2xl p-5 sm:p-6 transition-all shadow-sm hover:shadow-md disabled:opacity-65 disabled:cursor-not-allowed">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="inline-block bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase">
-                                Umur 9 – 12 Tahun
-                            </span>
-                            <span id="count-t2-badge" class="text-xs font-bold text-slate-600 bg-slate-200/70 px-2.5 py-0.5 rounded-full">10 Baki</span>
+                    <div id="card-start-t2" class="flex flex-col justify-between bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 sm:p-6 transition-all shadow-sm">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="inline-block bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase">
+                                    Umur 9 – 12 Tahun
+                                </span>
+                                <span id="count-t2-badge" class="text-xs font-bold text-slate-600 bg-slate-200/70 px-2.5 py-0.5 rounded-full">10 Baki</span>
+                            </div>
+                            <h3 class="text-xl font-extrabold text-slate-800 mb-2">Mod Tahap 2</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                                <strong>Format 1 Soalan, 1 Jawapan (Lisan)</strong><br>
+                                Jawapan rujukan dipapar terus pada skrin Hos. Peserta meneka secara lisan.
+                            </p>
                         </div>
-                        <h3 class="text-xl font-extrabold text-slate-800 group-hover:text-amber-700 mb-2">Mod Tahap 2</h3>
-                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                            <strong>Format 1 Soalan, 1 Jawapan (Lisan)</strong><br>
-                            Jawapan rujukan dipapar terus pada skrin Hos. Peserta meneka secara lisan.
-                        </p>
-                    </button>
+                        <div class="mt-5 pt-4 border-t border-slate-200/80">
+                            <button id="btn-start-t2" onclick="hostStartQuiz('tahap2')" class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-sm shadow transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                ▶ MULA
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Notis khas jika dalam mod Penjawab Soalan -->
@@ -143,7 +157,7 @@
 
             <!-- PAPARAN 2: SESI KUIZ AKTIF -->
             <section id="view-quiz" class="hidden">
-                <!-- Bar Status Atas (Tanpa Markah) & Butang Henti/Sambung Permainan untuk Hos -->
+                <!-- Bar Status Atas & Kawalan Sesi (Henti/Sambung & Keluar Kategori Kuiz) untuk Hos -->
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                     <div class="flex flex-wrap items-center gap-2">
                         <span id="badge-active-mode" class="px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-blue-100 text-blue-800">
@@ -152,10 +166,13 @@
                         <span id="txt-progress" class="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl text-xs sm:text-sm font-bold">Soalan #1 • Baki: 10</span>
                     </div>
 
-                    <!-- Butang Henti / Sambung Permainan Khusus Hos Program -->
-                    <div id="host-game-pause-wrapper" class="hidden">
-                        <button id="btn-toggle-game-pause" onclick="hostToggleGamePause()" class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-extrabold shadow-sm transition flex items-center gap-1.5">
+                    <!-- Butang Henti/Sambung Permainan & Ikon Keluar Kategori Kuiz Khusus Hos Program -->
+                    <div id="host-game-pause-wrapper" class="hidden flex flex-wrap items-center gap-2">
+                        <button id="btn-toggle-game-pause" onclick="hostToggleGamePause()" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-extrabold shadow-sm transition flex items-center gap-1.5">
                             ⏸ Henti Permainan
+                        </button>
+                        <button id="btn-exit-category" onclick="hostResetToMenu()" title="Keluar Kategori Kuiz & Hentikan Lagu" class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-extrabold shadow-sm transition flex items-center gap-1.5">
+                            🚪 Keluar
                         </button>
                     </div>
                 </div>
@@ -247,8 +264,8 @@
 
                     <!-- BAR NAVIGASI BAWAH (HOS SAHAJA) -->
                     <div id="host-footer-nav" class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
-                        <button onclick="hostResetToMenu()" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition">
-                            ← Tukar Tahap
+                        <button onclick="hostResetToMenu()" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-rose-600 hover:text-rose-800 hover:bg-rose-50 transition flex items-center gap-1.5">
+                            🚪 Keluar Kategori Kuiz
                         </button>
                         <button id="btn-next-question" onclick="hostNextQuestion()" class="hidden px-5 sm:px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-extrabold shadow-md transition">
                             Soalan Seterusnya (Belum Selesai) →
@@ -328,7 +345,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h3 class="text-lg sm:text-xl font-extrabold">⚙️ Tetapan Hos Program / Admin</h3>
-                        <span class="bg-blue-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">v1.3</span>
+                        <span class="bg-blue-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full">v1.4</span>
                     </div>
                     <p class="text-xs text-slate-400">Urus tajuk program, keselamatan, muzik latar & status soalan di Cloud Firebase</p>
                 </div>
@@ -362,7 +379,7 @@
                                 <p class="text-xs text-slate-500">Status binaan aplikasi masa nyata</p>
                             </div>
                             <span class="px-3 py-1 rounded-xl bg-blue-100 text-blue-800 font-black text-xs sm:text-sm">
-                                Versi Aplikasi: v1.3
+                                Versi Aplikasi: v1.4
                             </span>
                         </div>
 
@@ -506,7 +523,7 @@
         const bankDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kuiz_bank', ROOM_ID);
 
         // Versi Semasa Aplikasi
-        const APP_VERSION = "v1.3";
+        const APP_VERSION = "v1.4";
 
         // Bank Soalan Lalai (Dilengkapi medan 'completed: false' untuk elak ulangan)
         const defaultQuizBank = {
@@ -781,6 +798,18 @@
                 return;
             }
 
+            // Aktifkan muzik latar secara automatik apabila Hos menekan MULA / SAMBUNG
+            if (liveQuizBank.bgmUrl && !liveQuizBank.bgmPlaying) {
+                try {
+                    await setDoc(bankDocRef, {
+                        ...liveQuizBank,
+                        bgmPlaying: true
+                    });
+                } catch (err) {
+                    console.error("Gagal mengaktifkan muzik latar:", err);
+                }
+            }
+
             await syncStateToCloud({
                 screen: 'quiz',
                 mode: mode,
@@ -801,23 +830,41 @@
             const willPause = !currentState.gamePaused;
             if (willPause) {
                 const rem = getRemainingSeconds();
+                // Hentikan muzik latar apabila permainan dihentikan sementara
+                if (liveQuizBank.bgmPlaying) {
+                    try {
+                        await setDoc(bankDocRef, {
+                            ...liveQuizBank,
+                            bgmPlaying: false
+                        });
+                    } catch (err) {}
+                }
                 await syncStateToCloud({
                     gamePaused: true,
                     timerRunning: false,
                     timerEndTime: null,
                     timerRemaining: rem
                 });
-                showToast("Permainan dihentikan sementara.");
+                showToast("Permainan dan lagu latar dihentikan sementara.");
             } else {
                 const rem = Math.max(1, Number(currentState.timerRemaining || 30));
                 const shouldRunTimer = (currentState.status === 'asking');
+                // Sambung semula muzik latar apabila permainan disambung
+                if (liveQuizBank.bgmUrl && !liveQuizBank.bgmPlaying) {
+                    try {
+                        await setDoc(bankDocRef, {
+                            ...liveQuizBank,
+                            bgmPlaying: true
+                        });
+                    } catch (err) {}
+                }
                 await syncStateToCloud({
                     gamePaused: false,
                     timerRunning: shouldRunTimer,
                     timerEndTime: shouldRunTimer ? (Date.now() + rem * 1000) : null,
                     timerRemaining: rem
                 });
-                showToast("Permainan disambung semula!");
+                showToast("Permainan dan lagu latar disambung semula!");
             }
         };
 
@@ -920,6 +967,15 @@
 
         window.hostResetToMenu = async function() {
             if (userRole !== 'host') return;
+            // Hentikan lagu latar secara automatik apabila keluar dari kategori kuiz
+            if (liveQuizBank.bgmPlaying) {
+                try {
+                    await setDoc(bankDocRef, {
+                        ...liveQuizBank,
+                        bgmPlaying: false
+                    });
+                } catch (err) {}
+            }
             await syncStateToCloud({
                 screen: 'menu',
                 status: 'asking',
@@ -931,6 +987,7 @@
                 timerEndTime: null,
                 timerRemaining: 30
             });
+            showToast("Keluar kategori kuiz. Lagu latar dihentikan.");
         };
 
         window.openSettingsToManageQuestions = function() {
@@ -1037,8 +1094,8 @@
         function syncBgmAudioPlayer() {
             const player = document.getElementById('bgm-player');
             const isQuizRunning = (currentState.screen === 'quiz' && !currentState.gamePaused);
-            // Lagu latar auto main semasa kuiz berlangsung atau apabila diaktifkan Hos, kecuali jika Penjawab memilih senyap lokal
-            const globalShouldPlay = Boolean(liveQuizBank.bgmUrl && (liveQuizBank.bgmPlaying || isQuizRunning));
+            // Lagu latar hanya dimainkan semasa kuiz aktif berjalan (tidak dihentikan & tidak di menu utama)
+            const globalShouldPlay = Boolean(liveQuizBank.bgmUrl && liveQuizBank.bgmPlaying && isQuizRunning);
             const deviceShouldPlay = (userRole === 'host') ? globalShouldPlay : (globalShouldPlay && !isViewerMuted);
 
             updateBgmButtonUI(globalShouldPlay);
@@ -1064,7 +1121,7 @@
         document.addEventListener('pointerdown', () => {
             const player = document.getElementById('bgm-player');
             const isQuizRunning = (currentState.screen === 'quiz' && !currentState.gamePaused);
-            const globalShouldPlay = Boolean(liveQuizBank.bgmUrl && (liveQuizBank.bgmPlaying || isQuizRunning));
+            const globalShouldPlay = Boolean(liveQuizBank.bgmUrl && liveQuizBank.bgmPlaying && isQuizRunning);
             const deviceShouldPlay = (userRole === 'host') ? globalShouldPlay : (globalShouldPlay && !isViewerMuted);
 
             if (deviceShouldPlay && player.paused) {
@@ -1325,12 +1382,41 @@
             // 1. SKRIN MENU UTAMA
             if (currentState.screen === 'menu') {
                 document.getElementById('view-menu').classList.remove('hidden');
-                document.getElementById('btn-start-t1').disabled = !isHost;
-                document.getElementById('btn-start-t2').disabled = !isHost;
+
+                const btnT1 = document.getElementById('btn-start-t1');
+                const btnT2 = document.getElementById('btn-start-t2');
+                const t1DoneCount = t1List.filter(q => q.completed).length;
+                const t2DoneCount = t2List.filter(q => q.completed).length;
+
+                // Tetapkan label MULA / SAMBUNG / SELESAI mengikut aktiviti Hos yang lalu
+                if (t1List.length > 0 && t1Rem === 0) {
+                    btnT1.innerHTML = "✔ SELESAI (0 Baki)";
+                    btnT1.className = "w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+                } else if (t1DoneCount > 0) {
+                    btnT1.innerHTML = "⏩ SAMBUNG";
+                    btnT1.className = "w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+                } else {
+                    btnT1.innerHTML = "▶ MULA";
+                    btnT1.className = "w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+                }
+
+                if (t2List.length > 0 && t2Rem === 0) {
+                    btnT2.innerHTML = "✔ SELESAI (0 Baki)";
+                    btnT2.className = "w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+                } else if (t2DoneCount > 0) {
+                    btnT2.innerHTML = "⏩ SAMBUNG";
+                    btnT2.className = "w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-sm shadow transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+                } else {
+                    btnT2.innerHTML = "▶ MULA";
+                    btnT2.className = "w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-sm shadow transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+                }
+
+                btnT1.disabled = !isHost;
+                btnT2.disabled = !isHost;
 
                 if (isHost) {
                     document.getElementById('viewer-waiting-banner').classList.add('hidden');
-                    document.getElementById('menu-subtext').textContent = "Pilih kategori untuk menyambung soalan yang masih belum selesai.";
+                    document.getElementById('menu-subtext').textContent = "Tekan MULA atau SAMBUNG pada kategori untuk memulakan permainan dan lagu latar.";
                 } else {
                     document.getElementById('viewer-waiting-banner').classList.remove('hidden');
                     document.getElementById('menu-subtext').textContent = "Paparan Penjawab Soalan sedia diselaraskan secara automatik.";
@@ -1342,7 +1428,7 @@
             if (currentState.screen === 'quiz') {
                 document.getElementById('view-quiz').classList.remove('hidden');
 
-                // Kawal butang Henti / Sambung Permainan untuk Hos Program
+                // Kawal butang Henti / Sambung Permainan & Keluar Kategori Kuiz untuk Hos Program
                 const pauseWrapper = document.getElementById('host-game-pause-wrapper');
                 const pauseBtn = document.getElementById('btn-toggle-game-pause');
                 const pausedBanner = document.getElementById('game-paused-banner');
@@ -1356,7 +1442,7 @@
                         pauseBtn.className = "px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold shadow-sm transition flex items-center gap-1.5";
                     } else {
                         pauseBtn.innerHTML = "⏸ Henti Permainan";
-                        pauseBtn.className = "px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-extrabold shadow-sm transition flex items-center gap-1.5";
+                        pauseBtn.className = "px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-extrabold shadow-sm transition flex items-center gap-1.5";
                     }
                 } else {
                     pauseWrapper.classList.add('hidden');
